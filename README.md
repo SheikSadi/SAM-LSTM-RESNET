@@ -51,27 +51,21 @@ Data-driven saliency has recently gained a lot of attention thanks to the use of
 * [Keras](https://github.com/fchollet/keras) 1.1.0, configured for using Theano as backend 
 * OpenCV 3.0.0
 
-### Installing `OpenCV` from prebuilt binaries
-1. Install python 3.x (3.4+) or Python 2.7.x from here.
-2. Numpy package (for example, using pip install numpy command).
-3. Matplotlib (pip install matplotlib) (Matplotlib is optional, but recommended since we use it a lot in our tutorials).
-4. Install all packages into their default locations. Python will be installed to C:/Python27/ in case of Python 2.7.
-5. After installation, open Python IDLE. Enter import numpy and make sure Numpy is working fine.
-6. Download latest OpenCV release from GitHub or SourceForge site and double-click to extract it.
-7. Goto opencv/build/python/2.7 folder.
-8. Copy cv2.pyd to C:/Python27/lib/site-packages.
-9. Open Python IDLE and type following codes in Python terminal.
+## Setting up the environment
+### OpenCV
+1. Install python==2.7.18
+2. Download OpenCV==3.0.0 and extract it.
+3. Goto `opencv/build/python/2.7/x64` folder.
+4. Copy `cv2.pyd` to `/lib/site-packages/` where the Python package was installed.
+9. Confirm installation with the following lines of code
 ```
-import cv2 as cv
-print( cv.__version__ )
+import cv2
+print( cv2.__version__ )
 ```
-10. If the results are printed out without any errors, congratulations !!! You have installed OpenCV-Python successfully.
-
-### Installing `keras`
-```
-pip install keras==1.1.0
-```
-Then go to `%USERPROFILE%` directory on Windows and create a folder `.keras`. There, create `keras.json` with the following text -
+### Keras
+1. `pip install keras==1.1.0`
+2. Go to `%USERPROFILE%` directory on Windows and create a folder `.keras`.
+3. Inside it, create `keras.json` with the following content -
 ```
 {
     "image_dim_ordering": "th", 
@@ -80,6 +74,8 @@ Then go to `%USERPROFILE%` directory on Windows and create a folder `.keras`. Th
     "backend": "theano"
 }
 ```
+### Theano
+1. `pip install Theano==0.9.0`
 
 ## Usage
 We built two different versions of our model: one based on the VGG-16 (**SAM-VGG**) and the other based on the ResNet-50 (**SAM-ResNet**). It is possible use both versions of SAM by changing the ```version``` variable in the [config.py](config.py) file (set ```version = 0``` for SAM-VGG or ```version = 1``` for SAM-ResNet).
