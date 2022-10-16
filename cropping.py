@@ -69,7 +69,7 @@ def crop(original_image_path, saliency_map_path, cropped_image_path, a_r, attent
 def batch_crop_images(
     originals_folder="samples", maps_folder="maps", crops_folder="crops"
 ):
-    home_dir = "D:/smart cropping/sam"
+    home_dir = os.getcwd()
     originals_path = os.path.join(home_dir, originals_folder)
     maps_path = os.path.join(home_dir, maps_folder)
     crops_path = os.path.join(home_dir, crops_folder)
