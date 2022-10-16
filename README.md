@@ -76,6 +76,7 @@ print( cv2.__version__ )
 ```
 ### Theano
 1. `pip install Theano==0.9.0`
+2. `pip install h5py==2.10.0`
 
 ## Usage
 We built two different versions of our model: one based on the VGG-16 (**SAM-VGG**) and the other based on the ResNet-50 (**SAM-ResNet**). It is possible use both versions of SAM by changing the ```version``` variable in the [config.py](config.py) file (set ```version = 0``` for SAM-VGG or ```version = 1``` for SAM-ResNet).
