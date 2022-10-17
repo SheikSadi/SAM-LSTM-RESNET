@@ -58,39 +58,65 @@ def fixedAspRatioRectangle(saliency_mapped_ndarray, a_r, attention):
     return i, j, w, h
 
 
-def crop(original_image_path, saliency_map_path, cropped_image_path, a_r, attention):
+def crop(
+    original_image_path,
+    saliency_map_path,
+    cropped_image_path,
+    boxed_image_path,
+    a_r,
+    attention,
+):
     salient_ndimage = cv2.imread(saliency_map_path, cv2.IMREAD_GRAYSCALE)
     i, j, w, h = fixedAspRatioRectangle(salient_ndimage, a_r, attention)
     original_ndimage = cv2.imread(original_image_path, cv2.IMREAD_COLOR)
     cropped_ndimage = original_ndimage[i : i + h, j : j + w, :]
-    return cv2.imwrite(cropped_image_path, cropped_ndimage.astype(int))
+    crop_success = cv2.imwrite(cropped_image_path, cropped_ndimage.astype(int))
+    # Draw a diagonal blue line with thickness of 5 px
+    blue = (255, 0, 0)
+    thickness = 5
+    cv2.rectangle(original_ndimage, (j, i), (j + w, i + h), blue, thickness)
+    box_success = cv2.imwrite(boxed_image_path, original_ndimage.astype(int))
+    
+    return crop_success and box_success
 
 
 def batch_crop_images(
-    originals_folder="samples", maps_folder="maps", crops_folder="crops"
+    originals_folder,
+    maps_folder,
+    crops_folder,
+    boxes_folder,
+    aspect_ratio,
+    retained_attention,
 ):
     home_dir = os.getcwd()
     originals_path = os.path.join(home_dir, originals_folder)
     maps_path = os.path.join(home_dir, maps_folder)
     crops_path = os.path.join(home_dir, crops_folder)
+    boxes_path = os.path.join(home_dir, boxes_folder)
+
+    for path in [maps_path, crops_path, boxes_path]:
+        if not os.path.exists(path):
+            os.mkdir(path)
 
     if not os.path.exists(crops_path):
         os.mkdir(crops_path)
 
     for fname in os.listdir(maps_path):
-        if fname in os.listdir(originals_path):
+        if fname in os.listdir(originals_path) and fname not in os.listdir(crops_path):
             original_file = os.path.join(originals_path, fname)
             mapping_file = os.path.join(maps_path, fname)
             crop_file = os.path.join(crops_path, fname)
+            box_file = os.path.join(boxes_path, fname)
 
             crop_success = crop(
-                original_file, mapping_file, crop_file, aspect_ratio, retained_attention
+                original_file,
+                mapping_file,
+                crop_file,
+                box_file,
+                aspect_ratio,
+                retained_attention,
             )
             if crop_success:
-                print("Cropped %s successfully" % fname)
+                print("Cropped and boxed %s successfully" % fname)
             else:
-                print("Cropping %s failed" % fname)
-
-
-if __name__ == "__main__":
-    batch_crop_images()
+                print("Cropping and boxing %s failed" % fname)

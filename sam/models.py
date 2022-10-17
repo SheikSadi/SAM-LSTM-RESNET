@@ -1,6 +1,6 @@
 from __future__ import division
-from keras.layers import Lambda, merge
-from keras.layers.convolutional import Convolution2D, AtrousConvolution2D
+
+import os
 import keras.backend as K
 import theano.tensor as T
 import numpy as np
@@ -9,6 +9,11 @@ from dcn_resnet import dcn_resnet
 from gaussian_prior import LearningPrior
 from attentive_convlstm import AttentiveConvLSTM
 from config import *
+from keras.layers import Lambda, merge
+from keras.layers.convolutional import Convolution2D, AtrousConvolution2D
+
+
+K.set_image_dim_ordering(dim_ordering="th")
 
 
 def repeat(x):
