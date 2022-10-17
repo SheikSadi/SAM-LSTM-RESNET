@@ -8,11 +8,7 @@ setup(
     include_package_data=True,
     packages=["sam"],
     # dependencies
-    install_requires=[
-        "keras==1.1.0",
-        "Theano",
-        "h5py==2.10.0"
-    ],
+    install_requires=["keras==1.1.0", "Theano", "h5py==2.10.0"],
     version="0.0.0",
     description="Python library to generate saliency maps and cropping",
 )

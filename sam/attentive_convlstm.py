@@ -5,6 +5,8 @@ from keras.layers import Layer, InputSpec
 from keras.layers.convolutional import Convolution2D
 from keras import initializations, activations
 
+K.set_image_dim_ordering(dim_ordering="th")
+
 
 class AttentiveConvLSTM(Layer):
     def __init__(

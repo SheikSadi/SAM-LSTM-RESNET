@@ -76,7 +76,7 @@ def crop(
     thickness = 5
     cv2.rectangle(original_ndimage, (j, i), (j + w, i + h), blue, thickness)
     box_success = cv2.imwrite(boxed_image_path, original_ndimage.astype(int))
-    
+
     return crop_success and box_success
 
 

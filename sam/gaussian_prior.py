@@ -7,7 +7,9 @@ import theano.tensor as T
 from keras.layers import Layer, InputSpec
 from keras import initializations, regularizers, constraints
 
+
 floatX = theano.config.floatX
+K.set_image_dim_ordering(dim_ordering="th")
 
 
 class LearningPrior(Layer):

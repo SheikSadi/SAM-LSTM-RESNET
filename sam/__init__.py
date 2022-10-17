@@ -2,6 +2,7 @@ from __future__ import division
 
 import cv2
 import os
+
 os.environ["KERAS_BACKEND"] = "theano"
 
 from keras.optimizers import RMSprop
@@ -14,6 +15,7 @@ from sam.models import sam_vgg, sam_resnet, kl_divergence, correlation_coefficie
 from sam.generator import generator, generator_test
 from sam.cropping import batch_crop_images
 from sam.config import *
+
 
 class SAM:
     VGG = 0
@@ -85,7 +87,7 @@ class SAM:
                 ],
             )
 
-    def test(self,  weights_dir, imgs_test_path="samples"):
+    def test(self, weights_dir, imgs_test_path="samples"):
         # Output Folder Path
         home_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         current_dir = os.getcwd()
@@ -93,8 +95,7 @@ class SAM:
         imgs_test_path = os.path.join(current_dir, imgs_test_path)
         maps_folder = os.path.join(current_dir, "maps")
 
-        vgg_weights_path = os.path.join(
-            weights_dir, "sam-vgg_salicon_weights.pkl")
+        vgg_weights_path = os.path.join(weights_dir, "sam-vgg_salicon_weights.pkl")
         resnet_weights_path = os.path.join(
             weights_dir, "sam-resnet_salicon2017_weights.pkl"
         )
