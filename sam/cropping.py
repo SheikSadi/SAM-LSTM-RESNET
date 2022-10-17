@@ -2,7 +2,7 @@ import os
 import numpy as np
 import cv2
 import math
-from config import *
+from sam.config import *
 
 
 def maxSubarrayFL(array, width, threshold):
