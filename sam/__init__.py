@@ -4,15 +4,15 @@ import cv2
 import os
 os.environ["KERAS_BACKEND"] = "theano"
 
-from config import *
+from sam.config import *
 from keras.optimizers import RMSprop
 from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
 from keras.layers import Input
 from keras.models import Model
-from utilities import postprocess_predictions
-from models import sam_vgg, sam_resnet, kl_divergence, correlation_coefficient, nss
-from generator import generator, generator_test
-from cropping import batch_crop_images
+from sam.utilities import postprocess_predictions
+from sam.models import sam_vgg, sam_resnet, kl_divergence, correlation_coefficient, nss
+from sam.generator import generator, generator_test
+from sam.cropping import batch_crop_images
 
 
 class SAM:

@@ -1,5 +1,5 @@
 from __future__ import division
-import math
+
 import cv2
 import numpy as np
 import scipy.io

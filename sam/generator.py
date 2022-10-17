@@ -2,8 +2,8 @@ from __future__ import division
 
 import os
 import numpy as np
-from config import *
-from utilities import (
+from sam.config import *
+from sam.utilities import (
     preprocess_images,
     preprocess_maps,
     preprocess_fixmaps,
