@@ -88,15 +88,16 @@ class SAM:
     def test(self, imgs_test_path="samples"):
         # Output Folder Path
         home_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        weights_dir = os.path.join(home_dir, "weights")
         current_dir = os.getcwd()
 
         imgs_test_path = os.path.join(current_dir, imgs_test_path)
         maps_folder = os.path.join(current_dir, "maps")
         
         vgg_weights_path = os.path.join(
-            home_dir, "weights/sam-vgg_salicon_weights.pkl")
+            weights_dir, "weights/sam-vgg_salicon_weights.pkl")
         resnet_weights_path = os.path.join(
-            home_dir, "weights/sam-resnet_salicon_weights.pkl"
+            weights_dir, "weights/sam-resnet_salicon_weights.pkl"
         )
 
         if not os.path.exists(maps_folder):
