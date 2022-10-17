@@ -6,7 +6,7 @@ setup(
     author="SheikSadi",
     author_email="biis.saadi@gmail.com",
     include_package_data=True,
-    packages=["sam", "weights"],
+    packages=["sam"],
     # dependencies
     install_requires=[
         "keras==1.1.0",
