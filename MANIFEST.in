@@ -1,1 +1,1 @@
-include src/weights/*.pkl
+include weights/*.pkl
