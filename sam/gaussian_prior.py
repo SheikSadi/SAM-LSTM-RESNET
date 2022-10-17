@@ -1,10 +1,11 @@
 from __future__ import division
+
+import theano
+import numpy as np
 import keras.backend as K
 import theano.tensor as T
 from keras.layers import Layer, InputSpec
 from keras import initializations, regularizers, constraints
-import theano
-import numpy as np
 
 floatX = theano.config.floatX
 
