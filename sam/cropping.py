@@ -88,13 +88,13 @@ def batch_crop_images(
     aspect_ratio,
     retained_attention,
 ):
-    home_dir = os.getcwd()
-    originals_path = os.path.join(home_dir, originals_folder)
-    maps_path = os.path.join(home_dir, maps_folder)
-    crops_path = os.path.join(home_dir, crops_folder)
-    boxes_path = os.path.join(home_dir, boxes_folder)
+    current_dir = os.getcwd()
+    originals_path = os.path.join(current_dir, originals_folder)
+    maps_path = os.path.join(current_dir, maps_folder)
+    crops_path = os.path.join(current_dir, crops_folder)
+    boxes_path = os.path.join(current_dir, boxes_folder)
 
-    for path in [maps_path, crops_path, boxes_path]:
+    for path in [crops_path, boxes_path]:
         if not os.path.exists(path):
             os.mkdir(path)
 
