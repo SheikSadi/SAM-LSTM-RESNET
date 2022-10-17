@@ -5,6 +5,7 @@ setup(
     url="https://github.com/SheikSadi/SAM-LSTM-RESNET.git",
     author="SheikSadi",
     author_email="biis.saadi@gmail.com",
+    include_package_data=True,
     packages=["sam", "weights"],
     # dependencies
     install_requires=[
