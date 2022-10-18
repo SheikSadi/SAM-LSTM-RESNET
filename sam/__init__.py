@@ -97,7 +97,7 @@ class SAM:
 
         vgg_weights_path = os.path.join(weights_dir, "sam-vgg_salicon_weights.pkl")
         resnet_weights_path = os.path.join(
-            weights_dir, "sam-resnet_salicon2017_weights.pkl"
+            weights_dir, "sam-resnet_salicon_weights.pkl"
         )
 
         if not os.path.exists(maps_folder):
