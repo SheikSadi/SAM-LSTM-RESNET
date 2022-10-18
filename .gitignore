@@ -7,6 +7,7 @@ __pycache__/
 crops/
 maps/
 samples/
+boxes/
 
 # C extensions
 *.so
