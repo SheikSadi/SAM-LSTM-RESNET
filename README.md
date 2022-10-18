@@ -43,7 +43,7 @@ Please cite with the following Bibtex code:
 
 Data-driven saliency has recently gained a lot of attention thanks to the use of Convolutional Neural Networks for predicting gaze fixations. In this paper we go beyond standard approaches to saliency prediction, in which gaze maps are computed with a feed-forward network, and we present a novel model which can predict accurate saliency maps by incorporating neural attentive mechanisms. The core of our solution is a Convolutional LSTM that focuses on the most salient regions of the input image to iteratively refine the predicted saliency map. Additionally, to tackle the center bias present in human eye fixations, our model can learn a set of prior maps generated with Gaussian functions. We show, through an extensive evaluation, that the proposed architecture overcomes the current state of the art on two public saliency prediction datasets. We further study the contribution of each key components to demonstrate their robustness on different scenarios.
 
-![sam-fig](https://raw.githubusercontent.com/marcellacornia/sam/master/figs/model.jpg)
+![image](https://user-images.githubusercontent.com/34588815/196414378-34a16d32-9ac0-4f98-a287-18e4456e8d26.png)
 
 ## Requirements
 * Python 2.7
