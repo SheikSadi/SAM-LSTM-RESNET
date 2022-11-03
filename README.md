@@ -54,10 +54,11 @@ Data-driven saliency has recently gained a lot of attention thanks to the use of
 ## Setting up the environment
 ### OpenCV
 1. Install python==2.7.18
-2. Download OpenCV==3.0.0 and extract it.
-3. Goto `opencv/build/python/2.7/x64` folder.
-4. Copy `cv2.pyd` to `/lib/site-packages/` where the Python package was installed.
-9. Confirm installation with the following lines of code
+2. Download OpenCV==3.0.0 from [here](https://sourceforge.net/projects/opencvlibrary/files/opencv-win/3.0.0/opencv-3.0.0.exe/download).
+3. Extract the contents.
+4. Goto `opencv/build/python/2.7/x64` folder.
+5. Copy `cv2.pyd` to `/lib/site-packages/` where the Python package was installed.
+6. Confirm installation with the following lines of code
 ```
 import cv2
 print( cv2.__version__ )
