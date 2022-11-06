@@ -230,14 +230,6 @@ def sam_resnet(x):
     )
     # Attentive Convolutional LSTM
     att_convlstm = Lambda(repeat, repeat_shape)(conv_feat)
-    import tensorflow as tf
-    print(
-        "############### DEBUGGING ###############\n"
-        f"Output of dcn: {tf.shape(dcn.output)}\n"
-        f"Output of conv_feat: {tf.shape(conv_feat)}\n"
-        f"Output of att_convlstm: {tf.shape(att_convlstm)}\n"
-        "################## END ##################\n"
-    )
     att_convlstm = AttentiveConvLSTM(
         nb_filters_in=512, nb_filters_out=512, nb_filters_att=512, nb_cols=3, nb_rows=3
     )(att_convlstm)

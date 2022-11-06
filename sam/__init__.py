@@ -33,7 +33,7 @@ class SalMap:
             )
             print("Compiling SAM-ResNet")
             self.model.compile(
-                RMSprop(lr=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
+                RMSprop(learning_rate=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
             )
         # elif self.version == self.VGG:
         #     self.model = Model(
@@ -41,7 +41,7 @@ class SalMap:
         #     )
         #     print("Compiling SAM-VGG")
         #     self.model.compile(
-        #         RMSprop(lr=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
+        #         RMSprop(learning_rate=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
         #     )
         else:
             raise NotImplementedError

@@ -70,7 +70,7 @@ class LearningPrior(Layer):
         sigma_x = self.W[self.nb_gaussian * 2 : self.nb_gaussian * 3]
         sigma_y = self.W[self.nb_gaussian * 3 :]
 
-        self.b_s = x.shape[0]
+        self.b_s = x.shape[0] if x.shape[0] else 1
         self.height = x.shape[2]
         self.width = x.shape[3]
 
@@ -100,8 +100,8 @@ class LearningPrior(Layer):
             
         )
 
-        x_t = K.repeat_elements(K.expand_dims(x_t, dim=-1), self.nb_gaussian, axis=-1)
-        y_t = K.repeat_elements(K.expand_dims(y_t, dim=-1), self.nb_gaussian, axis=-1)
+        x_t = K.repeat_elements(K.expand_dims(x_t, axis=-1), self.nb_gaussian, axis=-1)
+        y_t = K.repeat_elements(K.expand_dims(y_t, axis=-1), self.nb_gaussian, axis=-1)
 
         gaussian = (
             1
@@ -128,7 +128,7 @@ class LearningPrior(Layer):
         )
         gaussian = gaussian / max_gauss
 
-        output = K.repeat_elements(K.expand_dims(gaussian, dim=0), self.b_s, axis=0)
+        output = K.repeat_elements(K.expand_dims(gaussian, axis=0), self.b_s, axis=0)
 
         return output
 

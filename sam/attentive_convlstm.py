@@ -50,12 +50,7 @@ class AttentiveConvLSTM(Layer):
 
     def get_initial_states(self, x):
         initial_state = K.sum(x, axis=1)
-        initial_state = K.conv2d(
-            initial_state,
-            K.zeros((self.nb_filters_out, self.nb_filters_in, 1, 1)),
-            padding="same",
-        )
-        initial_states = [initial_state for _ in range(len(self.states))]
+        initial_states = [tf.zeros_like(initial_state) for _ in range(len(self.states))]
 
         return initial_states
 
@@ -216,7 +211,7 @@ class AttentiveConvLSTM(Layer):
         return x
 
     def step(self, x, states):
-        x_shape = K.shape(x)
+        x_shape = list(x.shape)
         h_tm1 = states[0]
         c_tm1 = states[1]
 
@@ -260,7 +255,7 @@ class AttentiveConvLSTM(Layer):
             input_length=input_shape[1],
         )
 
-        if last_output.ndim == 3:
-            last_output = K.expand_dims(last_output, dim=0)
+        if len(last_output.shape) == 3:
+            last_output = K.expand_dims(last_output, axis=0)
 
         return last_output
