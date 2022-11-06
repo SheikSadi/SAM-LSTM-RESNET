@@ -1,42 +1,35 @@
-from __future__ import division
-
+# TODO: Upgrade
 import cv2
 import os
-
-os.environ["KERAS_BACKEND"] = "theano"
+import keras.backend as K
 
 from keras.optimizers import RMSprop
-from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Input
 from keras.models import Model
 
 from sam.utilities import postprocess_predictions
-from sam.models import sam_vgg, sam_resnet, kl_divergence, correlation_coefficient, nss
+from sam.models import kl_divergence, correlation_coefficient, nss, sam_resnet #, sam_vgg
 from sam.generator import generator, generator_test
 from sam.cropping import batch_crop_images
 from sam.config import *
 
 
-class SAM:
-    VGG = 0
+class SaliencyAttentiveModel:
     RESNET = 1
+    VGG = 0
 
     def __init__(self, version=RESNET):
+        K.set_image_data_format("channels_first")
+
         self.x = Input((3, shape_r, shape_c))
         self.x_maps = Input((nb_gaussian, shape_r_gt, shape_c_gt))
+
         self.version = version
         self.compile()
 
     def compile(self):
-        if self.version == self.VGG:
-            self.model = Model(
-                input=[self.x, self.x_maps], output=sam_vgg([self.x, self.x_maps])
-            )
-            print("Compiling SAM-VGG")
-            self.model.compile(
-                RMSprop(lr=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
-            )
-        elif self.version == self.RESNET:
+        if self.version == self.RESNET:
             self.model = Model(
                 input=[self.x, self.x_maps], output=sam_resnet([self.x, self.x_maps])
             )
@@ -44,50 +37,59 @@ class SAM:
             self.model.compile(
                 RMSprop(lr=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
             )
+        # elif self.version == self.VGG:
+        #     self.model = Model(
+        #         input=[self.x, self.x_maps], output=sam_vgg([self.x, self.x_maps])
+        #     )
+        #     print("Compiling SAM-VGG")
+        #     self.model.compile(
+        #         RMSprop(lr=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
+        #     )
         else:
             raise NotImplementedError
 
-    def train(self):
-        if nb_imgs_train % b_s != 0 or nb_imgs_val % b_s != 0:
-            print(
-                "The number of training and validation images should be a multiple of the batch size. Please change your batch size in config.py accordingly."
-            )
-            exit()
+    # def train(self):
+    #     if nb_imgs_train % b_s != 0 or nb_imgs_val % b_s != 0:
+    #         print(
+    #             "The number of training and validation images should be a multiple of the batch size. Please change your batch size in config.py accordingly."
+    #         )
+    #         exit()
 
-        if self.version == self.VGG:
-            print("Training SAM-VGG")
-            self.model.fit_generator(
-                generator(b_s=b_s),
-                nb_imgs_train,
-                nb_epoch=nb_epoch,
-                validation_data=generator(b_s=b_s, phase_gen="val"),
-                nb_val_samples=nb_imgs_val,
-                callbacks=[
-                    EarlyStopping(patience=3),
-                    ModelCheckpoint(
-                        "weights.sam-vgg.{epoch:02d}-{val_loss:.4f}.pkl",
-                        save_best_only=True,
-                    ),
-                ],
-            )
-        elif self.version == self.RESNET:
-            print("Training SAM-ResNet")
-            self.model.fit_generator(
-                generator(b_s=b_s),
-                nb_imgs_train,
-                nb_epoch=nb_epoch,
-                validation_data=generator(b_s=b_s, phase_gen="val"),
-                nb_val_samples=nb_imgs_val,
-                callbacks=[
-                    EarlyStopping(patience=3),
-                    ModelCheckpoint(
-                        "weights.sam-resnet.{epoch:02d}-{val_loss:.4f}.pkl",
-                        save_best_only=True,
-                    ),
-                ],
-            )
+    #     if self.version == self.VGG:
+    #         print("Training SAM-VGG")
+    #         self.model.fit_generator(
+    #             generator(b_s=b_s),
+    #             nb_imgs_train,
+    #             nb_epoch=nb_epoch,
+    #             validation_data=generator(b_s=b_s, phase_gen="val"),
+    #             nb_val_samples=nb_imgs_val,
+    #             callbacks=[
+    #                 EarlyStopping(patience=3),
+    #                 ModelCheckpoint(
+    #                     "weights.sam-vgg.{epoch:02d}-{val_loss:.4f}.pkl",
+    #                     save_best_only=True,
+    #                 ),
+    #             ],
+    #         )
+    #     elif self.version == self.RESNET:
+    #         print("Training SAM-ResNet")
+    #         self.model.fit_generator(
+    #             generator(b_s=b_s),
+    #             nb_imgs_train,
+    #             nb_epoch=nb_epoch,
+    #             validation_data=generator(b_s=b_s, phase_gen="val"),
+    #             nb_val_samples=nb_imgs_val,
+    #             callbacks=[
+    #                 EarlyStopping(patience=3),
+    #                 ModelCheckpoint(
+    #                     "weights.sam-resnet.{epoch:02d}-{val_loss:.4f}.pkl",
+    #                     save_best_only=True,
+    #                 ),
+    #             ],
+    #         )
 
     def test(self, weights_dir, imgs_test_path="samples"):
+        #FIXME: Upgrade
         # Output Folder Path
         home_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         current_dir = os.getcwd()
@@ -95,7 +97,7 @@ class SAM:
         imgs_test_path = os.path.join(current_dir, imgs_test_path)
         maps_folder = os.path.join(current_dir, "maps")
 
-        vgg_weights_path = os.path.join(weights_dir, "sam-vgg_salicon_weights.pkl")
+        # vgg_weights_path = os.path.join(weights_dir, "sam-vgg_salicon_weights.pkl")
         resnet_weights_path = os.path.join(
             weights_dir, "sam-resnet_salicon_weights.pkl"
         )
@@ -120,13 +122,13 @@ class SAM:
             )
             exit()
 
-        if self.version == self.VGG:
-            print("Loading SAM-VGG weights")
-            self.model.load_weights(vgg_weights_path)
-        elif self.version == self.RESNET:
+        if self.version == self.RESNET:
             print("Loading SAM-ResNet weights")
             self.model.load_weights(resnet_weights_path)
-
+        # elif self.version == self.VGG:
+        #     print("Loading SAM-VGG weights")
+        #     self.model.load_weights(vgg_weights_path)
+        
         print("Predicting saliency maps for " + imgs_test_path)
         predictions = self.model.predict_generator(
             generator_test(b_s=b_s, imgs_test_path=imgs_test_path), nb_imgs_test
