@@ -15,13 +15,11 @@ from sam.cropping import batch_crop_images
 from sam.config import *
 
 
-class SaliencyAttentiveModel:
+class SalMap:
     RESNET = 1
     VGG = 0
 
     def __init__(self, version=RESNET):
-        K.set_image_data_format("channels_first")
-
         self.x = Input((3, shape_r, shape_c))
         self.x_maps = Input((nb_gaussian, shape_r_gt, shape_c_gt))
 
@@ -31,7 +29,7 @@ class SaliencyAttentiveModel:
     def compile(self):
         if self.version == self.RESNET:
             self.model = Model(
-                input=[self.x, self.x_maps], output=sam_resnet([self.x, self.x_maps])
+                inputs=[self.x, self.x_maps], outputs=sam_resnet([self.x, self.x_maps])
             )
             print("Compiling SAM-ResNet")
             self.model.compile(

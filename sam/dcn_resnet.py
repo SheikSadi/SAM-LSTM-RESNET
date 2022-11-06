@@ -165,10 +165,10 @@ def dcn_resnet(input_tensor=None):
 
     # conv_1
     x = ZeroPadding2D((3, 3))(img_input)
-    x = Conv2D(64, (7, 7), subsample=(2, 2), name="conv1")(x)
+    x = Conv2D(64, (7, 7), strides=(2, 2), name="conv1")(x)
     x = BatchNormalization(axis=bn_axis, name="bn_conv1")(x)
     x = Activation("relu")(x)
-    x = MaxPooling2D((3, 3), strides=(2, 2), border_mode="same")(x)
+    x = MaxPooling2D((3, 3), strides=(2, 2), padding="same")(x)
 
     # conv_2
     x = conv_block(x, 3, [64, 64, 256], stage=2, block="a", strides=(1, 1))

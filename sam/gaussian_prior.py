@@ -8,7 +8,7 @@ from keras.layers import Layer, InputSpec
 from keras import initializers, regularizers, constraints
 
 
-floatX = K.floatX()
+floatX = K.floatx()
 
 
 class LearningPrior(Layer):
@@ -38,7 +38,7 @@ class LearningPrior(Layer):
         self.W_shape = (self.nb_gaussian * 4,)
         self.W = self.init(self.W_shape, name="{}_W".format(self.name))
 
-        self.trainable_weights = [self.W]
+        self._trainable_weights = [self.W]
 
         self.regularizers = []
         if self.W_regularizer:

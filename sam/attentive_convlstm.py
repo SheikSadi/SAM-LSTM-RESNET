@@ -3,8 +3,6 @@ import keras.backend as K
 from keras.layers import Layer, InputSpec, Conv2D
 from keras import initializers, activations
 
-K.set_image_dim_ordering(dim_ordering="th")
-
 
 class AttentiveConvLSTM(Layer):
     """
@@ -64,7 +62,6 @@ class AttentiveConvLSTM(Layer):
     def build(self, input_shape):
         self.input_spec = [InputSpec(shape=input_shape)]
         self.states = [None, None]
-        self.trainable_weights = []
 
         self.W_a = Conv2D(
             self.nb_filters_att,
@@ -202,18 +199,18 @@ class AttentiveConvLSTM(Layer):
         self.W_o.built = True
         self.U_o.built = True
 
-        self.trainable_weights = []
-        self.trainable_weights.extend(self.W_a.trainable_weights)
-        self.trainable_weights.extend(self.U_a.trainable_weights)
-        self.trainable_weights.extend(self.V_a.trainable_weights)
-        self.trainable_weights.extend(self.W_i.trainable_weights)
-        self.trainable_weights.extend(self.U_i.trainable_weights)
-        self.trainable_weights.extend(self.W_f.trainable_weights)
-        self.trainable_weights.extend(self.U_f.trainable_weights)
-        self.trainable_weights.extend(self.W_c.trainable_weights)
-        self.trainable_weights.extend(self.U_c.trainable_weights)
-        self.trainable_weights.extend(self.W_o.trainable_weights)
-        self.trainable_weights.extend(self.U_o.trainable_weights)
+        self._trainable_weights = []
+        self._trainable_weights.extend(self.W_a.trainable_weights)
+        self._trainable_weights.extend(self.U_a.trainable_weights)
+        self._trainable_weights.extend(self.V_a.trainable_weights)
+        self._trainable_weights.extend(self.W_i.trainable_weights)
+        self._trainable_weights.extend(self.U_i.trainable_weights)
+        self._trainable_weights.extend(self.W_f.trainable_weights)
+        self._trainable_weights.extend(self.U_f.trainable_weights)
+        self._trainable_weights.extend(self.W_c.trainable_weights)
+        self._trainable_weights.extend(self.U_c.trainable_weights)
+        self._trainable_weights.extend(self.W_o.trainable_weights)
+        self._trainable_weights.extend(self.U_o.trainable_weights)
 
     def preprocess_input(self, x):
         return x
