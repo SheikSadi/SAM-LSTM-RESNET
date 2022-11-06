@@ -1,15 +1,14 @@
-from __future__ import division
-
-import theano
+"""
+Upgraded @SheikSadi
+"""
+import tensorflow as tf
 import numpy as np
 import keras.backend as K
-import theano.tensor as T
 from keras.layers import Layer, InputSpec
-from keras import initializations, regularizers, constraints
+from keras import initializers, regularizers, constraints
 
 
-floatX = theano.config.floatX
-K.set_image_dim_ordering(dim_ordering="th")
+floatX = K.floatX()
 
 
 class LearningPrior(Layer):
@@ -24,7 +23,7 @@ class LearningPrior(Layer):
         **kwargs
     ):
         self.nb_gaussian = nb_gaussian
-        self.init = initializations.get(init, dim_ordering="th")
+        self.init = initializers.get(init)
 
         self.W_regularizer = regularizers.get(W_regularizer)
         self.activity_regularizer = regularizers.get(activity_regularizer)
@@ -85,13 +84,20 @@ class LearningPrior(Layer):
         sigma_x = K.clip(sigma_x, 0.1, 0.9)
         sigma_y = K.clip(sigma_y, 0.2, 0.8)
 
-        x_t = T.dot(
-            T.ones((self.height, 1)),
-            self._linspace(0, 1.0, self.width).dimshuffle("x", 0),
+        x_t = tf.tensordot(
+            tf.ones((self.height, 1)),
+            tf.expand_dims(
+                self._linspace(0, 1.0, self.width), axis=0
+            ),
+            axes=1,
         )
-        y_t = T.dot(
-            self._linspace(e1, e2, self.height).dimshuffle(0, "x"),
-            T.ones((1, self.width)),
+        y_t = tf.tensordot(
+            tf.expand_dims(
+                self._linspace(e1, e2, self.height), axis=1
+            ),
+            tf.ones((1, self.width)),
+            axes=1,
+            
         )
 
         x_t = K.repeat_elements(K.expand_dims(x_t, dim=-1), self.nb_gaussian, axis=-1)
@@ -100,7 +106,7 @@ class LearningPrior(Layer):
         gaussian = (
             1
             / (2 * np.pi * sigma_x * sigma_y + K.epsilon())
-            * T.exp(
+            * tf.math.exp(
                 -(
                     (x_t - mu_x) ** 2 / (2 * sigma_x ** 2 + K.epsilon())
                     + (y_t - mu_y) ** 2 / (2 * sigma_y ** 2 + K.epsilon())
@@ -130,11 +136,9 @@ class LearningPrior(Layer):
     def _linspace(start, stop, num):
         # produces results identical to:
         # np.linspace(start, stop, num)
-        start = T.cast(start, floatX)
-        stop = T.cast(stop, floatX)
-        num = T.cast(num, floatX)
-        step = (stop - start) / (num - 1)
-        return T.arange(num, dtype=floatX) * step + start
+        return tf.experimental.numpy.linspace(
+            start, stop, num, dtype=floatX, axis=0
+        )
 
     def get_config(self):
         config = {
