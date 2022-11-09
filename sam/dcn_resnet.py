@@ -79,7 +79,7 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
 
 
 def conv_block_atrous(
-    input_tensor, kernel_size, filters, stage, block, atrous_rate=(2, 2)
+    input_tensor, kernel_size, filters, stage, block, dilation_rate=(2, 2)
 ):
     """
     UPGRADED: @SheikSadi
@@ -98,7 +98,7 @@ def conv_block_atrous(
         nb_filter2,
         kernel_size,
         padding="same",
-        dilation_rate=atrous_rate,
+        dilation_rate=dilation_rate,
         name=conv_name_base + "2b",
     )(x)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2b")(x)
@@ -116,7 +116,7 @@ def conv_block_atrous(
 
 
 def identity_block_atrous(
-    input_tensor, kernel_size, filters, stage, block, atrous_rate=(2, 2)
+    input_tensor, kernel_size, filters, stage, block, dilation_rate=(2, 2)
 ):
     """
     UPGRADED - @SheikSadi
@@ -134,7 +134,7 @@ def identity_block_atrous(
     x = Conv2D(
         nb_filter2,
         kernel_size,
-        dilation_rate=atrous_rate,
+        dilation_rate=dilation_rate,
         padding="same",
         name=conv_name_base + "2b",
     )(x)
@@ -150,7 +150,6 @@ def identity_block_atrous(
 
 
 def dcn_resnet(input_tensor=None):
-    #TODO: UPGRAGE CODE
     input_shape = (3, None, None)
 
     if input_tensor is None:
@@ -183,33 +182,33 @@ def dcn_resnet(input_tensor=None):
 
     # conv_4
     x = conv_block_atrous(
-        x, 3, [256, 256, 1024], stage=4, block="a", atrous_rate=(2, 2)
+        x, 3, [256, 256, 1024], stage=4, block="a", dilation_rate=(2, 2)
     )
     x = identity_block_atrous(
-        x, 3, [256, 256, 1024], stage=4, block="b", atrous_rate=(2, 2)
+        x, 3, [256, 256, 1024], stage=4, block="b", dilation_rate=(2, 2)
     )
     x = identity_block_atrous(
-        x, 3, [256, 256, 1024], stage=4, block="c", atrous_rate=(2, 2)
+        x, 3, [256, 256, 1024], stage=4, block="c", dilation_rate=(2, 2)
     )
     x = identity_block_atrous(
-        x, 3, [256, 256, 1024], stage=4, block="d", atrous_rate=(2, 2)
+        x, 3, [256, 256, 1024], stage=4, block="d", dilation_rate=(2, 2)
     )
     x = identity_block_atrous(
-        x, 3, [256, 256, 1024], stage=4, block="e", atrous_rate=(2, 2)
+        x, 3, [256, 256, 1024], stage=4, block="e", dilation_rate=(2, 2)
     )
     x = identity_block_atrous(
-        x, 3, [256, 256, 1024], stage=4, block="f", atrous_rate=(2, 2)
+        x, 3, [256, 256, 1024], stage=4, block="f", dilation_rate=(2, 2)
     )
 
     # conv_5
     x = conv_block_atrous(
-        x, 3, [512, 512, 2048], stage=5, block="a", atrous_rate=(4, 4)
+        x, 3, [512, 512, 2048], stage=5, block="a", dilation_rate=(4, 4)
     )
     x = identity_block_atrous(
-        x, 3, [512, 512, 2048], stage=5, block="b", atrous_rate=(4, 4)
+        x, 3, [512, 512, 2048], stage=5, block="b", dilation_rate=(4, 4)
     )
     x = identity_block_atrous(
-        x, 3, [512, 512, 2048], stage=5, block="c", atrous_rate=(4, 4)
+        x, 3, [512, 512, 2048], stage=5, block="c", dilation_rate=(4, 4)
     )
 
     # Create model

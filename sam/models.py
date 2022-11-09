@@ -203,14 +203,14 @@ def gaussian_priors_init(shape, name=None):
 #     priors1 = LearningPrior(nb_gaussian=nb_gaussian, init=gaussian_priors_init)(x[1])
 #     concateneted = merge([att_convlstm, priors1], mode="concat", concat_axis=1)
 #     learned_priors1 = AtrousConvolution2D(
-#         512, 5, 5, padding="same", activation="relu", atrous_rate=(4, 4)
+#         512, 5, 5, padding="same", activation="relu", dilation_rate=(4, 4)
 #     )(concateneted)
 
 #     # Learned Prior (2)
 #     priors2 = LearningPrior(nb_gaussian=nb_gaussian, init=gaussian_priors_init)(x[1])
 #     concateneted = merge([learned_priors1, priors2], mode="concat", concat_axis=1)
 #     learned_priors2 = AtrousConvolution2D(
-#         512, 5, 5, padding="same", activation="relu", atrous_rate=(4, 4)
+#         512, 5, 5, padding="same", activation="relu", dilation_rate=(4, 4)
 #     )(concateneted)
 
 #     # Final Convolutional Layer

@@ -5,9 +5,6 @@ from keras import initializers, activations
 
 
 class AttentiveConvLSTM(Layer):
-    """
-    Upgraded by @SheikSadi
-    """
     def __init__(
         self,
         nb_filters_in,
@@ -48,15 +45,21 @@ class AttentiveConvLSTM(Layer):
     def get_output_shape_for(self, input_shape):
         return input_shape[:1] + (self.nb_filters_out,) + input_shape[3:]
 
+    def compute_mask(self, input, mask):
+        return None
+
     def get_initial_states(self, x):
-        initial_state = K.sum(x, axis=1)
-        initial_states = [tf.zeros_like(initial_state) for _ in range(len(self.states))]
+        # shape of 'x' >> (b_s, nb_timestep, 512, shape_r_gt, shape_c_gt)
+        initial_state_shape = (x.shape[0], self.nb_filters_out, x.shape[3], x.shape[4])
+        initial_state = tf.zeros(initial_state_shape)
+        initial_states = [initial_state for _ in self.states]
 
         return initial_states
 
     def build(self, input_shape):
         self.input_spec = [InputSpec(shape=input_shape)]
         self.states = [None, None]
+        self._trainable_weights = []
 
         self.W_a = Conv2D(
             self.nb_filters_att,
@@ -64,6 +67,7 @@ class AttentiveConvLSTM(Layer):
             padding="same",
             use_bias=True,
             kernel_initializer=self.init,
+            data_format="channels_first",
         )
         self.U_a = Conv2D(
             self.nb_filters_att,
@@ -71,6 +75,7 @@ class AttentiveConvLSTM(Layer):
             padding="same",
             use_bias=True,
             kernel_initializer=self.init,
+            data_format="channels_first",
         )
         self.V_a = Conv2D(
             1,
@@ -78,16 +83,17 @@ class AttentiveConvLSTM(Layer):
             padding="same",
             use_bias=False,
             kernel_initializer=self.attentive_init,
+            data_format="channels_first",
         )
 
         self.W_a.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_att, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_att, input_shape[3], input_shape[4])
         )
         self.U_a.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_in, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_in, input_shape[3], input_shape[4])
         )
         self.V_a.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_att, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_att, input_shape[3], input_shape[4])
         )
 
         self.W_a.built = True
@@ -100,20 +106,22 @@ class AttentiveConvLSTM(Layer):
             padding="same",
             use_bias=True,
             kernel_initializer=self.init,
+            data_format="channels_first",
         )
         self.U_i = Conv2D(
             self.nb_filters_out,
             (self.nb_rows, self.nb_cols),
             padding="same",
             use_bias=True,
-            kernel_initializer=self.inner_init,
+            kernel_initializer=self.init,
+            data_format="channels_first",
         )
 
         self.W_i.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_in, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_in, input_shape[3], input_shape[4])
         )
         self.U_i.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_out, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_out, input_shape[3], input_shape[4])
         )
 
         self.W_i.built = True
@@ -125,20 +133,22 @@ class AttentiveConvLSTM(Layer):
             padding="same",
             use_bias=True,
             kernel_initializer=self.init,
+            data_format="channels_first",
         )
         self.U_f = Conv2D(
             self.nb_filters_out,
             (self.nb_rows, self.nb_cols),
             padding="same",
             use_bias=True,
-            kernel_initializer=self.inner_init,
+            kernel_initializer=self.init,
+            data_format="channels_first",
         )
 
         self.W_f.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_in, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_in, input_shape[3], input_shape[4])
         )
         self.U_f.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_out, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_out, input_shape[3], input_shape[4])
         )
 
         self.W_f.built = True
@@ -150,20 +160,22 @@ class AttentiveConvLSTM(Layer):
             padding="same",
             use_bias=True,
             kernel_initializer=self.init,
+            data_format="channels_first",
         )
         self.U_c = Conv2D(
             self.nb_filters_out,
             (self.nb_rows, self.nb_cols),
             padding="same",
             use_bias=True,
-            kernel_initializer=self.inner_init,
+            kernel_initializer=self.init,
+            data_format="channels_first",
         )
 
         self.W_c.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_in, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_in, input_shape[3], input_shape[4])
         )
         self.U_c.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_out, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_out, input_shape[3], input_shape[4])
         )
 
         self.W_c.built = True
@@ -175,52 +187,39 @@ class AttentiveConvLSTM(Layer):
             padding="same",
             use_bias=True,
             kernel_initializer=self.init,
+            data_format="channels_first",
         )
         self.U_o = Conv2D(
             self.nb_filters_out,
             (self.nb_rows, self.nb_cols),
             padding="same",
             use_bias=True,
-            kernel_initializer=self.inner_init,
+            kernel_initializer=self.init,
+            data_format="channels_first",
         )
 
         self.W_o.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_in, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_in, input_shape[3], input_shape[4])
         )
         self.U_o.build(
-            tf.TensorShape([input_shape[0], self.nb_filters_out, input_shape[3], input_shape[4]])
+            (input_shape[0], self.nb_filters_out, input_shape[3], input_shape[4])
         )
 
         self.W_o.built = True
         self.U_o.built = True
 
-        self._trainable_weights = []
-        self._trainable_weights.extend(self.W_a.trainable_weights)
-        self._trainable_weights.extend(self.U_a.trainable_weights)
-        self._trainable_weights.extend(self.V_a.trainable_weights)
-        self._trainable_weights.extend(self.W_i.trainable_weights)
-        self._trainable_weights.extend(self.U_i.trainable_weights)
-        self._trainable_weights.extend(self.W_f.trainable_weights)
-        self._trainable_weights.extend(self.U_f.trainable_weights)
-        self._trainable_weights.extend(self.W_c.trainable_weights)
-        self._trainable_weights.extend(self.U_c.trainable_weights)
-        self._trainable_weights.extend(self.W_o.trainable_weights)
-        self._trainable_weights.extend(self.U_o.trainable_weights)
-
     def preprocess_input(self, x):
         return x
 
     def step(self, x, states):
-        x_shape = list(x.shape)
         h_tm1 = states[0]
         c_tm1 = states[1]
 
         e = self.V_a(K.tanh(self.W_a(h_tm1) + self.U_a(x)))
         a = K.reshape(
-            K.softmax(K.batch_flatten(e)),
-            (x_shape[0], 1, x_shape[2], x_shape[3])
+            K.softmax(K.batch_flatten(e)), (x.shape[0], 1, x.shape[2], x.shape[3])
         )
-        x_tilde = x * K.repeat_elements(a, x_shape[1], 1)
+        x_tilde = x * K.repeat_elements(a, x.shape[1], 1)
 
         x_i = self.W_i(x_tilde)
         x_f = self.W_f(x_tilde)

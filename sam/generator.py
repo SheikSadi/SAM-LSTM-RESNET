@@ -72,13 +72,19 @@ def generator_test(b_s, imgs_test_path):
         if fname.endswith((".jpg", ".jpeg", ".png"))
     ]
     images.sort()
-
+    n_images = len(images)
     gaussian = np.zeros((b_s, nb_gaussian, shape_r_gt, shape_c_gt))
 
     counter = 0
+    img_yielded = 0
     while True:
-        yield [
+        yield [[
             preprocess_images(images[counter : counter + b_s], shape_r, shape_c),
             gaussian,
-        ]
-        counter = (counter + b_s) % len(images)
+        ]]
+        img_yielded += 1
+        if img_yielded == n_images:
+            break
+        else:
+            counter = (counter + b_s) % n_images
+        
