@@ -67,7 +67,7 @@ def generator(b_s, phase_gen="train"):
 
 def generator_test(b_s, imgs_test_path):
     images = [
-        os.path.join(imgs_test_path, fname)
+        os.path.abspath(os.path.join(imgs_test_path, fname))
         for fname in os.listdir(imgs_test_path)
         if fname.endswith((".jpg", ".jpeg", ".png"))
     ]

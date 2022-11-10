@@ -46,26 +46,14 @@ Data-driven saliency has recently gained a lot of attention thanks to the use of
 ![image](https://user-images.githubusercontent.com/34588815/196414378-34a16d32-9ac0-4f98-a287-18e4456e8d26.png)
 
 ## Requirements
-* Python 2.7
-* [Theano](https://github.com/Theano/Theano) 0.9.0
-* [Keras](https://github.com/fchollet/keras) 1.1.0, configured for using Theano as backend 
-* OpenCV 3.0.0
+* Python 3.9
+* OpenCV 4.6.0
+* tensorflow/keras 2.9.0
 
 ## Setting up the environment
-### OpenCV
-1. Install python==2.7.18
-2. Download OpenCV==3.0.0 and extract it.
-3. Goto `opencv/build/python/2.7/x64` folder.
-4. Copy `cv2.pyd` to `/lib/site-packages/` where the Python package was installed.
-9. Confirm installation with the following lines of code
-```
-import cv2
-print( cv2.__version__ )
-```
-### Keras
-1. `pip install keras==1.1.0`
-2. Go to `%USERPROFILE%` directory on Windows and create a folder `.keras`.
-3. Inside it, create `keras.json` with the following content -
+### Keras (WINDOWS)
+1. Go to `%USERPROFILE%` directory on Windows and create a folder `.keras`.
+2. Inside it, create `keras.json` with the following content -
 ```
 {
     "image_dim_ordering": "th", 
@@ -74,26 +62,23 @@ print( cv2.__version__ )
     "backend": "theano"
 }
 ```
-### Theano
-1. `pip install Theano==0.9.0`
-2. `pip install h5py==2.10.0`
+### Keras (LINUX)
+```
+cd ~/.keras
+echo '{"floatx": "float32",\
+"epsilon": 1e-07,\
+"backend": "tensorflow",\
+"image_data_format": "channels_first"}' > keras.json
+```
 
 ## Usage
-We built two different versions of our model: one based on the VGG-16 (**SAM-VGG**) and the other based on the ResNet-50 (**SAM-ResNet**). It is possible use both versions of SAM by changing the ```version``` variable in the [config.py](config.py) file (set ```version = 0``` for SAM-VGG or ```version = 1``` for SAM-ResNet).
-
-To compute saliency maps using our pre-trained model:
+```python
+from sam import SalMap
+salmap = SalMap()
+salmap.compile()
+salmap.load_weights(weights_path="/weights/sam-resnet_salicon_weights.pkl")
+salmap.test(samples_dir="/samples")
 ```
-python main.py test path/to/images/folder/
-```
-where ```"path/to/images/folder/"``` is the path of a folder containing the images for which you want to calculate the saliency maps.
-
-To train our model from scratch:
-```
-python main.py train
-```
-It is also necessary to set parameters and paths in the [config.py](config.py) file.
-
-Note: To train our model, both binary fixation maps and groundtruth density maps are required. The current code for loading binary fixation maps supports the format used in SALICON (.mat files). If you want to train our model with other datasets, be sure to appropriately change the loading functions. 
 
 ## Pretrained Models
 Download one of the following pretrained models and save it in the code folder:

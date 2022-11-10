@@ -118,25 +118,16 @@ def batch_crop_images(
     aspect_ratio,
     retained_attention,
 ):
-    current_dir = os.getcwd()
-    originals_path = os.path.join(current_dir, originals_folder)
-    maps_path = os.path.join(current_dir, maps_folder)
-    crops_path = os.path.join(current_dir, crops_folder)
-    boxes_path = os.path.join(current_dir, boxes_folder)
+    for _dir in [crops_folder, boxes_folder]:
+        if not os.path.exists(_dir):
+            os.mkdir(_dir)
 
-    for path in [crops_path, boxes_path]:
-        if not os.path.exists(path):
-            os.mkdir(path)
-
-    if not os.path.exists(crops_path):
-        os.mkdir(crops_path)
-
-    for fname in os.listdir(maps_path):
-        if fname in os.listdir(originals_path):
-            original_file = os.path.join(originals_path, fname)
-            mapping_file = os.path.join(maps_path, fname)
-            crop_file = os.path.join(crops_path, fname)
-            box_file = os.path.join(boxes_path, fname)
+    for fname in os.listdir(maps_folder):
+        if fname in os.listdir(originals_folder):
+            original_file = os.path.join(originals_folder, fname)
+            mapping_file = os.path.join(maps_folder, fname)
+            crop_file = os.path.join(crops_folder, fname)
+            box_file = os.path.join(boxes_folder, fname)
 
             crop_success = crop(
                 original_file,

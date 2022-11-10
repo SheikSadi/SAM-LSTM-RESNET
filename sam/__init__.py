@@ -1,10 +1,10 @@
-# TODO: Upgrade
 import cv2
 import os
-import keras.backend as K
 
+import tensorflow as tf
 from keras.optimizers import RMSprop
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+
+# from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Input
 from keras.models import Model
 
@@ -14,17 +14,21 @@ from sam.models import (
     correlation_coefficient,
     nss,
     sam_resnet,
-)  # , sam_vgg
+    # sam_vgg
+)
 from sam.generator import generator, generator_test
 from sam.cropping import batch_crop_images
 from sam.config import *
+
+
+tf.keras.backend.set_image_data_format(data_format="channels_first")
 
 
 class SalMap:
     RESNET = 1
     VGG = 0
 
-    def __init__(self, weights_dir=None, version=RESNET):
+    def __init__(self, version=RESNET):
         self.x = Input((3, shape_r, shape_c))
         self.x_maps = Input((nb_gaussian, shape_r_gt, shape_c_gt))
         self.version = version
@@ -106,18 +110,26 @@ class SalMap:
         #     print("Loading SAM-VGG weights")
         #     self.model.load_weights(vgg_weights_path)
 
-    def test(self, imgs_test_path="samples"):
-        # FIXME: Upgrade
+    def test(self, test_imgs_path="/samples"):
+        if test_imgs_path.startswith("/"):
+            test_imgs_path = test_imgs_path.rsplit("/",1)[1]
         # Output Folder Path
-        imgs_test_path = os.path.join(os.getcwd(), imgs_test_path)
+        if os.path.exists(test_imgs_path):
+            self.imgs_test_path = test_imgs_path
+        else:
+            self.imgs_test_path = os.path.join(os.getcwd(), test_imgs_path)
+        if not os.path.exists(self.imgs_test_path):
+            raise Exception(
+                f"Couldn't find the directory {test_imgs_path} or {self.imgs_test_path}"
+            )
 
-        maps_folder = os.path.join(os.getcwd(), "maps")
+        maps_folder = os.path.join(os.path.dirname(self.imgs_test_path), "maps")
         if not os.path.exists(maps_folder):
             os.mkdir(maps_folder)
 
         file_names = [
             fname
-            for fname in os.listdir(imgs_test_path)
+            for fname in os.listdir(self.imgs_test_path)
             if (
                 fname.endswith((".jpg", ".jpeg", ".png"))
                 and fname not in os.listdir(maps_folder)
@@ -132,13 +144,13 @@ class SalMap:
             )
             exit()
 
-        print("Predicting saliency maps for " + imgs_test_path)
+        print("Predicting saliency maps for " + self.imgs_test_path)
         predictions = self.model.predict(
-            generator_test(b_s=b_s, imgs_test_path=imgs_test_path), nb_imgs_test
+            generator_test(b_s=b_s, imgs_test_path=self.imgs_test_path), nb_imgs_test
         )[0]
 
         for pred, fname in zip(predictions, file_names):
-            image_path = os.path.join(imgs_test_path, fname)
+            image_path = os.path.join(self.imgs_test_path, fname)
             original_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
             res = postprocess_predictions(
                 pred[0], original_image.shape[0], original_image.shape[1]
@@ -148,13 +160,19 @@ class SalMap:
 
     def batch_crop(
         self,
-        originals_folder="samples",
-        maps_folder="maps",
-        crops_folder="crops",
-        boxes_folder="boxes",
         a_r=aspect_ratio,
         attention=retained_attention,
     ):
+        originals_folder = self.imgs_test_path
+        maps_folder = os.path.join(os.path.dirname(originals_folder), "maps")
+        if not os.path.exists(maps_folder):
+            raise Exception(
+                f"Saliency mappings for the images in {originals_folder}"
+                " must be present in {maps_folder}.\n"
+                "Run this command - salmap.test(test_imgs_path=<original-images>) and try again!"
+            )
+        crops_folder = os.path.join(os.path.dirname(originals_folder), "crops")
+        boxes_folder = os.path.join(os.path.dirname(originals_folder), "boxes")
         batch_crop_images(
             originals_folder, maps_folder, crops_folder, boxes_folder, a_r, attention
         )
