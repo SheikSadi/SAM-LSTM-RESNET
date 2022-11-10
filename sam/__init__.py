@@ -112,7 +112,7 @@ class SalMap:
 
     def test(self, test_imgs_path="/samples"):
         if test_imgs_path.startswith("/"):
-            test_imgs_path = test_imgs_path.rsplit("/",1)[1]
+            test_imgs_path = test_imgs_path.rsplit("/", 1)[1]
         # Output Folder Path
         if os.path.exists(test_imgs_path):
             self.imgs_test_path = test_imgs_path
