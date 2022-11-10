@@ -55,12 +55,18 @@ def find_best_rectangle(
     y_finish = y_start + min_height
     best_factor = -1
 
-    while (
-        y_finish <= img_h
-        and (window_h := y_finish - y_start) >= min_height
-        and window_h <= img_h
-        and (window_w := math.ceil(asp_ratio * window_h)) <= img_w
-    ):
+    while True:
+        window_h = y_finish - y_start
+        window_w = math.ceil(asp_ratio * window_h)
+        
+        if not (
+            y_finish <= img_h
+            and window_h >= min_height
+            and window_h <= img_h
+            and window_w <= img_w
+        ):
+            break
+        
         subarray2d = array2d_hcum[y_finish] - array2d_hcum[y_start]
         x_start, attention_kept = find_max_subarray(
             subarray2d, window_w, threshold_attention
