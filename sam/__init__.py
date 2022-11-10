@@ -100,12 +100,8 @@ class SalMap:
             weights_dir = os.path.join(os.getcwd(), "weights")
 
         if not os.path.exists(weights_dir):
-            SAM_RESNET_SALICON_2017_WEIGHTS = (
-                "https://github.com/marcellacornia/sam/releases/download/1.0/sam-resnet_salicon2017_weights.pkl",
-            )
-            print(
-                f"Weights not found in {weights_dir}."
-            )
+            SAM_RESNET_SALICON_2017_WEIGHTS = "https://github.com/marcellacornia/sam/releases/download/1.0/sam-resnet_salicon2017_weights.pkl"
+            print(f"Weights not found in {weights_dir}.")
             weights_dir = get_file(
                 "sam-resnet_salicon_weights.pkl",
                 SAM_RESNET_SALICON_2017_WEIGHTS,

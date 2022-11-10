@@ -14,8 +14,6 @@ from keras.layers import (
 from keras.models import Model
 from keras.utils.data_utils import get_file
 
-TH_WEIGHTS_PATH_NO_TOP = "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_th_dim_ordering_th_kernels_notop.h5"
-
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
     """
@@ -223,6 +221,8 @@ def dcn_resnet(input_tensor=None):
     model = Model(img_input, x)
 
     # Load weights
+    TH_WEIGHTS_PATH_NO_TOP = "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_th_dim_ordering_th_kernels_notop.h5"
+
     weights_path = get_file(
         "resnet50_weights_th_dim_ordering_th_kernels_notop.h5",
         TH_WEIGHTS_PATH_NO_TOP,
