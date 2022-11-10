@@ -1,11 +1,11 @@
 """
 Upgraded @SheikSadi
 """
-import os
 import keras.backend as K
 import numpy as np
 
 from sam.config import *
+
 # from sam.dcn_vgg import dcn_vgg
 from sam.dcn_resnet import dcn_resnet
 from sam.gaussian_prior import LearningPrior
@@ -225,9 +225,7 @@ def gaussian_priors_init(shape, name=None):
 def sam_resnet(x):
     # Dilated Convolutional Network
     dcn = dcn_resnet(input_tensor=x[0])
-    conv_feat = Conv2D(512, (3, 3), padding="same", activation="relu")(
-        dcn.output
-    )
+    conv_feat = Conv2D(512, (3, 3), padding="same", activation="relu")(dcn.output)
     # Attentive Convolutional LSTM
     att_convlstm = Lambda(repeat, repeat_shape)(conv_feat)
     att_convlstm = AttentiveConvLSTM(
@@ -249,9 +247,7 @@ def sam_resnet(x):
     )(concateneted)
 
     # Final Convolutional Layer
-    outs = Conv2D(1, (1, 1), padding="same", activation="relu")(
-        learned_priors2
-    )
+    outs = Conv2D(1, (1, 1), padding="same", activation="relu")(learned_priors2)
     outs_up = Lambda(upsampling, upsampling_shape)(outs)
 
     return [outs_up, outs_up, outs_up]

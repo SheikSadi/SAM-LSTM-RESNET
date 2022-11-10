@@ -78,13 +78,14 @@ def generator_test(b_s, imgs_test_path):
     counter = 0
     img_yielded = 0
     while True:
-        yield [[
-            preprocess_images(images[counter : counter + b_s], shape_r, shape_c),
-            gaussian,
-        ]]
+        yield [
+            [
+                preprocess_images(images[counter : counter + b_s], shape_r, shape_c),
+                gaussian,
+            ]
+        ]
         img_yielded += 1
         if img_yielded == n_images:
             break
         else:
             counter = (counter + b_s) % n_images
-        

@@ -2,7 +2,15 @@
 This code is part of the Keras ResNet-50 model
 """
 import keras.backend as K
-from keras.layers import add, Input, Activation, Conv2D, MaxPooling2D, ZeroPadding2D, BatchNormalization
+from keras.layers import (
+    add,
+    Input,
+    Activation,
+    Conv2D,
+    MaxPooling2D,
+    ZeroPadding2D,
+    BatchNormalization,
+)
 from keras.models import Model
 from keras.utils.data_utils import get_file
 
@@ -50,9 +58,9 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
     conv_name_base = "res" + str(stage) + block + "_branch"
     bn_name_base = "bn" + str(stage) + block + "_branch"
 
-    x = Conv2D(nb_filter1, kernel_size=(1, 1), strides=strides, name=conv_name_base + "2a")(
-        input_tensor
-    )
+    x = Conv2D(
+        nb_filter1, kernel_size=(1, 1), strides=strides, name=conv_name_base + "2a"
+    )(input_tensor)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2a")(x)
     x = Activation("relu")(x)
 

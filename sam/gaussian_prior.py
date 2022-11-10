@@ -86,18 +86,13 @@ class LearningPrior(Layer):
 
         x_t = tf.tensordot(
             tf.ones((self.height, 1)),
-            tf.expand_dims(
-                self._linspace(0, 1.0, self.width), axis=0
-            ),
+            tf.expand_dims(self._linspace(0, 1.0, self.width), axis=0),
             axes=1,
         )
         y_t = tf.tensordot(
-            tf.expand_dims(
-                self._linspace(e1, e2, self.height), axis=1
-            ),
+            tf.expand_dims(self._linspace(e1, e2, self.height), axis=1),
             tf.ones((1, self.width)),
             axes=1,
-            
         )
 
         x_t = K.repeat_elements(K.expand_dims(x_t, axis=-1), self.nb_gaussian, axis=-1)
@@ -108,8 +103,8 @@ class LearningPrior(Layer):
             / (2 * np.pi * sigma_x * sigma_y + K.epsilon())
             * tf.math.exp(
                 -(
-                    (x_t - mu_x) ** 2 / (2 * sigma_x ** 2 + K.epsilon())
-                    + (y_t - mu_y) ** 2 / (2 * sigma_y ** 2 + K.epsilon())
+                    (x_t - mu_x) ** 2 / (2 * sigma_x**2 + K.epsilon())
+                    + (y_t - mu_y) ** 2 / (2 * sigma_y**2 + K.epsilon())
                 )
             )
         )
@@ -136,9 +131,7 @@ class LearningPrior(Layer):
     def _linspace(start, stop, num):
         # produces results identical to:
         # np.linspace(start, stop, num)
-        return tf.experimental.numpy.linspace(
-            start, stop, num, dtype=floatX, axis=0
-        )
+        return tf.experimental.numpy.linspace(start, stop, num, dtype=floatX, axis=0)
 
     def get_config(self):
         config = {

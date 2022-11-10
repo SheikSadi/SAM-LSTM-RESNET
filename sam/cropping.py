@@ -5,15 +5,13 @@ import math
 from sam.config import *
 
 
-def find_max_subarray(array:np.ndarray, window_w:int, threshold:float) -> tuple:
+def find_max_subarray(array: np.ndarray, window_w: int, threshold: float) -> tuple:
     assert len(array.shape) == 1
-    
+
     best_sum = -1
     start_idx = None
-    
-    array_cum = np.pad(
-        np.cumsum(array), pad_width=[(1,0)]
-    )
+
+    array_cum = np.pad(np.cumsum(array), pad_width=[(1, 0)])
 
     max_start_idx = array.shape[0] - window_w
 
@@ -28,28 +26,30 @@ def find_max_subarray(array:np.ndarray, window_w:int, threshold:float) -> tuple:
     return start_idx, best_sum
 
 
+def default_maximizer(box_area, img_area, attention_kept, total_attention):
+    area_factor = 1  # box_area / img_area
+    attention_factor = attention_kept / total_attention
+    # We want to maximize this value
+    factor = attention_factor / area_factor
+    return int(factor * 1000)
+
+
 def find_best_rectangle(
-    array2d, asp_ratio, keep_attention
+    array2d, asp_ratio, keep_attention, to_maximize=default_maximizer
 ):
-    array2d_hcum = np.pad(
-        np.cumsum(array2d, axis=0),
-        pad_width=[(1,0), (0,0)]
-    )
+    """
+    to_maximize can be user-defined function
+    and it will take in 4 input arguments -
+    box_area, img_area, attention_kept, total_attention
+    """
+    array2d_hcum = np.pad(np.cumsum(array2d, axis=0), pad_width=[(1, 0), (0, 0)])
     img_h, img_w = array2d.shape
     img_area = img_h * img_w
 
     total_attention = np.sum(array2d)
     threshold_attention = keep_attention * total_attention
 
-    def to_maximize(window_w, window_h, attention_kept):
-        box_area = window_w * window_h
-        area_factor = box_area/img_area
-        attention_factor = attention_kept/total_attention
-        # We want to maximize this value
-        factor = attention_factor/area_factor
-        return int(factor*1000)
-
-    #initialize
+    # initialize
     y_start = 0
     min_height = 1
     y_finish = y_start + min_height
@@ -57,16 +57,17 @@ def find_best_rectangle(
 
     while (
         y_finish <= img_h
-        and  (window_h := y_finish - y_start) >= min_height
+        and (window_h := y_finish - y_start) >= min_height
         and window_h <= img_h
-        and (window_w := math.ceil(asp_ratio*window_h)) <= img_w 
+        and (window_w := math.ceil(asp_ratio * window_h)) <= img_w
     ):
         subarray2d = array2d_hcum[y_finish] - array2d_hcum[y_start]
         x_start, attention_kept = find_max_subarray(
             subarray2d, window_w, threshold_attention
         )
         if attention_kept > 0:
-            factor = to_maximize(window_w, window_h, attention_kept)
+            box_area = window_w * window_h
+            factor = to_maximize(box_area, img_area, attention_kept, total_attention)
             if factor < 0:
                 raise KeyboardInterrupt("WTF!")
             elif factor > best_factor:
@@ -81,7 +82,7 @@ def find_best_rectangle(
         f"Attention kept: {round(best_attention/total_attention*100,2)}% "
         f"at an area: {round(w*h/img_area*100,2)}%"
     )
-        
+
     return x, y, w, h
 
 
@@ -94,9 +95,11 @@ def crop(
     attention,
 ):
     salient_ndimage = cv2.imread(saliency_map_path, cv2.IMREAD_GRAYSCALE)
+
     x, y, w, h = find_best_rectangle(salient_ndimage, a_r, attention)
+
     original_ndimage = cv2.imread(original_image_path, cv2.IMREAD_COLOR)
-    cropped_ndimage = original_ndimage[y:y+h,x:x+w,:]
+    cropped_ndimage = original_ndimage[y : y + h, x : x + w, :]
     crop_success = cv2.imwrite(cropped_image_path, cropped_ndimage.astype(int))
     # Draw a diagonal blue line with thickness of 5 px
     blue = (255, 0, 0)
@@ -129,7 +132,7 @@ def batch_crop_images(
         os.mkdir(crops_path)
 
     for fname in os.listdir(maps_path):
-        if fname in os.listdir(originals_path) and fname not in os.listdir(crops_path):
+        if fname in os.listdir(originals_path):
             original_file = os.path.join(originals_path, fname)
             mapping_file = os.path.join(maps_path, fname)
             crop_file = os.path.join(crops_path, fname)

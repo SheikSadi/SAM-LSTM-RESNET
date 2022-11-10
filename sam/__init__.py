@@ -9,7 +9,12 @@ from keras.layers import Input
 from keras.models import Model
 
 from sam.utilities import postprocess_predictions
-from sam.models import kl_divergence, correlation_coefficient, nss, sam_resnet #, sam_vgg
+from sam.models import (
+    kl_divergence,
+    correlation_coefficient,
+    nss,
+    sam_resnet,
+)  # , sam_vgg
 from sam.generator import generator, generator_test
 from sam.cropping import batch_crop_images
 from sam.config import *
@@ -29,9 +34,10 @@ class SalMap:
             self.model = Model(
                 inputs=[self.x, self.x_maps], outputs=sam_resnet([self.x, self.x_maps])
             )
-            
+
             self.model.compile(
-                RMSprop(learning_rate=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
+                RMSprop(learning_rate=1e-4),
+                loss=[kl_divergence, correlation_coefficient, nss],
             )
         # elif self.version == self.VGG:
         #     self.model = Model(
@@ -84,10 +90,10 @@ class SalMap:
     #             ],
     #         )
 
-    def load_weights(self,  weights_dir=None):
+    def load_weights(self, weights_dir=None):
         if not weights_dir:
             weights_dir = os.path.join(os.getcwd(), "weights")
-        
+
         if self.version == self.RESNET:
             resnet_weights_path = os.path.join(
                 weights_dir, "sam-resnet_salicon_weights.pkl"
@@ -100,12 +106,11 @@ class SalMap:
         #     print("Loading SAM-VGG weights")
         #     self.model.load_weights(vgg_weights_path)
 
-
     def test(self, imgs_test_path="samples"):
-        #FIXME: Upgrade
+        # FIXME: Upgrade
         # Output Folder Path
         imgs_test_path = os.path.join(os.getcwd(), imgs_test_path)
-        
+
         maps_folder = os.path.join(os.getcwd(), "maps")
         if not os.path.exists(maps_folder):
             os.mkdir(maps_folder)
@@ -126,7 +131,7 @@ class SalMap:
                 "The number of test images should be a multiple of the batch size. Please change your batch size in config.py accordingly."
             )
             exit()
-        
+
         print("Predicting saliency maps for " + imgs_test_path)
         predictions = self.model.predict(
             generator_test(b_s=b_s, imgs_test_path=imgs_test_path), nb_imgs_test
