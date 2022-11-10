@@ -7,7 +7,7 @@ from keras.optimizers import RMSprop
 # from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Input
 from keras.models import Model
-
+from keras.utils.data_utils import get_file
 from sam.utilities import postprocess_predictions
 from sam.models import (
     kl_divergence,
@@ -98,11 +98,22 @@ class SalMap:
         if not weights_dir:
             weights_dir = os.path.join(os.getcwd(), "weights")
 
-        if self.version == self.RESNET:
-            resnet_weights_path = os.path.join(
-                weights_dir, "sam-resnet_salicon_weights.pkl"
+        if not os.path.exists(weights_dir):
+            WEIGHTS_URL = (
+                "https://github.com/SheikSadi/SAM-LSTM-RESNET/tree/master/weights/sam-resnet_salicon_weights.pkl",
             )
-            self.model.load_weights(resnet_weights_path)
+            print(
+                f"Weights not found in {weights_dir}. Downloading it from {WEIGHTS_URL}"
+            )
+            weights_dir = get_file(
+                "sam-resnet_salicon_weights.pkl",
+                WEIGHTS_URL,
+                cache_subdir="weights",
+                md5_hash="f64f049c92468c9affcd44b0976cdafe",
+            )
+
+        if self.version == self.RESNET:
+            self.model.load_weights(weights_dir)
         # elif self.version == self.VGG:
         #     vgg_weights_path = os.path.join(
         #         weights_dir, "sam-vgg_salicon_weights.pkl"
