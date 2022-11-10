@@ -54,14 +54,6 @@ Data-driven saliency has recently gained a lot of attention thanks to the use of
 ### Keras (WINDOWS)
 1. Go to `%USERPROFILE%` directory on Windows and create a folder `.keras`.
 2. Inside it, create `keras.json` with the following content -
-```
-{
-    "image_dim_ordering": "th", 
-    "epsilon": 1e-07, 
-    "floatx": "float32", 
-    "backend": "theano"
-}
-```
 ### Keras (LINUX)
 ```
 cd ~/.keras
@@ -70,7 +62,6 @@ echo '{"floatx": "float32",\
 "backend": "tensorflow",\
 "image_data_format": "channels_first"}' > keras.json
 ```
-
 ## Usage
 ```python
 from sam import SalMap
