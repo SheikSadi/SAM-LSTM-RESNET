@@ -7,7 +7,7 @@ from keras.optimizers import RMSprop
 # from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Input
 from keras.models import Model
-from keras.utils.data_utils import get_file
+from keras.utils import get_file
 
 from sam.utilities import postprocess_predictions
 from sam.models import (

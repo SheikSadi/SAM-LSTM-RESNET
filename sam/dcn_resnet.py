@@ -12,7 +12,7 @@ from keras.layers import (
     BatchNormalization,
 )
 from keras.models import Model
-from keras.utils.data_utils import get_file
+from keras.utils import get_file
 
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
