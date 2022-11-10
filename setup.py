@@ -7,6 +7,7 @@ setup(
     author_email="biis.saadi@gmail.com",
     include_package_data=True,
     packages=["sam"],
+    install_requires=["requests==2.28.1"]
     version="0.0.0",
     description="Python library to generate saliency maps and cropping",
 )

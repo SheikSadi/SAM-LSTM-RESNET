@@ -227,7 +227,7 @@ def dcn_resnet(input_tensor=None):
         "resnet50_weights_th_dim_ordering_th_kernels_notop.h5",
         TH_WEIGHTS_PATH_NO_TOP,
         cache_subdir="weights",
-        md5_hash="f64f049c92468c9affcd44b0976cdafe",
+        file_hash="f64f049c92468c9affcd44b0976cdafe",
     )
     model.load_weights(weights_path)
 

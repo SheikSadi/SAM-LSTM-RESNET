@@ -8,6 +8,7 @@ from keras.optimizers import RMSprop
 from keras.layers import Input
 from keras.models import Model
 from keras.utils.data_utils import get_file
+
 from sam.utilities import postprocess_predictions
 from sam.models import (
     kl_divergence,
@@ -103,13 +104,13 @@ class SalMap:
                 "https://github.com/marcellacornia/sam/releases/download/1.0/sam-resnet_salicon2017_weights.pkl",
             )
             print(
-                f"Weights not found in {weights_dir}. Downloading it from {SAM_RESNET_SALICON_2017_WEIGHTS}"
+                f"Weights not found in {weights_dir}."
             )
             weights_dir = get_file(
                 "sam-resnet_salicon_weights.pkl",
                 SAM_RESNET_SALICON_2017_WEIGHTS,
                 cache_subdir="weights",
-                md5_hash="f64f049c92468c9affcd44b0976cdafe",
+                file_hash="92b5f89fd34a3968776a5c4327efb32c",
             )
 
         if self.version == self.RESNET:
