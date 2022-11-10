@@ -1,111 +1,135 @@
-from __future__ import division
-
 import cv2
 import os
 
-os.environ["KERAS_BACKEND"] = "theano"
-
+import tensorflow as tf
 from keras.optimizers import RMSprop
-from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
+
+# from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Input
 from keras.models import Model
 
 from sam.utilities import postprocess_predictions
-from sam.models import sam_vgg, sam_resnet, kl_divergence, correlation_coefficient, nss
+from sam.models import (
+    kl_divergence,
+    correlation_coefficient,
+    nss,
+    sam_resnet,
+    # sam_vgg
+)
 from sam.generator import generator, generator_test
 from sam.cropping import batch_crop_images
 from sam.config import *
 
 
-class SAM:
-    VGG = 0
+tf.keras.backend.set_image_data_format(data_format="channels_first")
+
+
+class SalMap:
     RESNET = 1
+    VGG = 0
 
     def __init__(self, version=RESNET):
         self.x = Input((3, shape_r, shape_c))
         self.x_maps = Input((nb_gaussian, shape_r_gt, shape_c_gt))
         self.version = version
-        self.compile()
 
     def compile(self):
-        if self.version == self.VGG:
+        if self.version == self.RESNET:
             self.model = Model(
-                input=[self.x, self.x_maps], output=sam_vgg([self.x, self.x_maps])
+                inputs=[self.x, self.x_maps], outputs=sam_resnet([self.x, self.x_maps])
             )
-            print("Compiling SAM-VGG")
+
             self.model.compile(
-                RMSprop(lr=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
+                RMSprop(learning_rate=1e-4),
+                loss=[kl_divergence, correlation_coefficient, nss],
             )
-        elif self.version == self.RESNET:
-            self.model = Model(
-                input=[self.x, self.x_maps], output=sam_resnet([self.x, self.x_maps])
-            )
-            print("Compiling SAM-ResNet")
-            self.model.compile(
-                RMSprop(lr=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
-            )
+        # elif self.version == self.VGG:
+        #     self.model = Model(
+        #         input=[self.x, self.x_maps], output=sam_vgg([self.x, self.x_maps])
+        #     )
+        #     print("Compiling SAM-VGG")
+        #     self.model.compile(
+        #         RMSprop(learning_rate=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
+        #     )
         else:
             raise NotImplementedError
 
-    def train(self):
-        if nb_imgs_train % b_s != 0 or nb_imgs_val % b_s != 0:
-            print(
-                "The number of training and validation images should be a multiple of the batch size. Please change your batch size in config.py accordingly."
-            )
-            exit()
+    # def train(self):
+    #     if nb_imgs_train % b_s != 0 or nb_imgs_val % b_s != 0:
+    #         print(
+    #             "The number of training and validation images should be a multiple of the batch size. Please change your batch size in config.py accordingly."
+    #         )
+    #         exit()
 
-        if self.version == self.VGG:
-            print("Training SAM-VGG")
-            self.model.fit_generator(
-                generator(b_s=b_s),
-                nb_imgs_train,
-                nb_epoch=nb_epoch,
-                validation_data=generator(b_s=b_s, phase_gen="val"),
-                nb_val_samples=nb_imgs_val,
-                callbacks=[
-                    EarlyStopping(patience=3),
-                    ModelCheckpoint(
-                        "weights.sam-vgg.{epoch:02d}-{val_loss:.4f}.pkl",
-                        save_best_only=True,
-                    ),
-                ],
-            )
-        elif self.version == self.RESNET:
-            print("Training SAM-ResNet")
-            self.model.fit_generator(
-                generator(b_s=b_s),
-                nb_imgs_train,
-                nb_epoch=nb_epoch,
-                validation_data=generator(b_s=b_s, phase_gen="val"),
-                nb_val_samples=nb_imgs_val,
-                callbacks=[
-                    EarlyStopping(patience=3),
-                    ModelCheckpoint(
-                        "weights.sam-resnet.{epoch:02d}-{val_loss:.4f}.pkl",
-                        save_best_only=True,
-                    ),
-                ],
-            )
+    #     if self.version == self.VGG:
+    #         print("Training SAM-VGG")
+    #         self.model.fit_generator(
+    #             generator(b_s=b_s),
+    #             nb_imgs_train,
+    #             nb_epoch=nb_epoch,
+    #             validation_data=generator(b_s=b_s, phase_gen="val"),
+    #             nb_val_samples=nb_imgs_val,
+    #             callbacks=[
+    #                 EarlyStopping(patience=3),
+    #                 ModelCheckpoint(
+    #                     "weights.sam-vgg.{epoch:02d}-{val_loss:.4f}.pkl",
+    #                     save_best_only=True,
+    #                 ),
+    #             ],
+    #         )
+    #     elif self.version == self.RESNET:
+    #         print("Training SAM-ResNet")
+    #         self.model.fit_generator(
+    #             generator(b_s=b_s),
+    #             nb_imgs_train,
+    #             nb_epoch=nb_epoch,
+    #             validation_data=generator(b_s=b_s, phase_gen="val"),
+    #             nb_val_samples=nb_imgs_val,
+    #             callbacks=[
+    #                 EarlyStopping(patience=3),
+    #                 ModelCheckpoint(
+    #                     "weights.sam-resnet.{epoch:02d}-{val_loss:.4f}.pkl",
+    #                     save_best_only=True,
+    #                 ),
+    #             ],
+    #         )
 
-    def test(self, weights_dir, imgs_test_path="samples"):
+    def load_weights(self, weights_dir=None):
+        if not weights_dir:
+            weights_dir = os.path.join(os.getcwd(), "weights")
+
+        if self.version == self.RESNET:
+            resnet_weights_path = os.path.join(
+                weights_dir, "sam-resnet_salicon_weights.pkl"
+            )
+            self.model.load_weights(resnet_weights_path)
+        # elif self.version == self.VGG:
+        #     vgg_weights_path = os.path.join(
+        #         weights_dir, "sam-vgg_salicon_weights.pkl"
+        #     )
+        #     print("Loading SAM-VGG weights")
+        #     self.model.load_weights(vgg_weights_path)
+
+    def test(self, test_imgs_path="/samples"):
+        if test_imgs_path.startswith("/"):
+            test_imgs_path = test_imgs_path.rsplit("/", 1)[1]
         # Output Folder Path
-        home_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        current_dir = os.getcwd()
+        if os.path.exists(test_imgs_path):
+            self.imgs_test_path = test_imgs_path
+        else:
+            self.imgs_test_path = os.path.join(os.getcwd(), test_imgs_path)
+        if not os.path.exists(self.imgs_test_path):
+            raise Exception(
+                f"Couldn't find the directory {test_imgs_path} or {self.imgs_test_path}"
+            )
 
-        imgs_test_path = os.path.join(current_dir, imgs_test_path)
-        maps_folder = os.path.join(current_dir, "maps")
-
-        vgg_weights_path = os.path.join(weights_dir, "sam-vgg_salicon_weights.pkl")
-        resnet_weights_path = os.path.join(
-            weights_dir, "sam-resnet_salicon_weights.pkl"
-        )
-
+        maps_folder = os.path.join(os.path.dirname(self.imgs_test_path), "maps")
         if not os.path.exists(maps_folder):
             os.mkdir(maps_folder)
 
         file_names = [
             fname
-            for fname in os.listdir(imgs_test_path)
+            for fname in os.listdir(self.imgs_test_path)
             if (
                 fname.endswith((".jpg", ".jpeg", ".png"))
                 and fname not in os.listdir(maps_folder)
@@ -120,20 +144,13 @@ class SAM:
             )
             exit()
 
-        if self.version == self.VGG:
-            print("Loading SAM-VGG weights")
-            self.model.load_weights(vgg_weights_path)
-        elif self.version == self.RESNET:
-            print("Loading SAM-ResNet weights")
-            self.model.load_weights(resnet_weights_path)
-
-        print("Predicting saliency maps for " + imgs_test_path)
-        predictions = self.model.predict_generator(
-            generator_test(b_s=b_s, imgs_test_path=imgs_test_path), nb_imgs_test
+        print("Predicting saliency maps for " + self.imgs_test_path)
+        predictions = self.model.predict(
+            generator_test(b_s=b_s, imgs_test_path=self.imgs_test_path), nb_imgs_test
         )[0]
 
         for pred, fname in zip(predictions, file_names):
-            image_path = os.path.join(imgs_test_path, fname)
+            image_path = os.path.join(self.imgs_test_path, fname)
             original_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
             res = postprocess_predictions(
                 pred[0], original_image.shape[0], original_image.shape[1]
@@ -143,13 +160,19 @@ class SAM:
 
     def batch_crop(
         self,
-        originals_folder="samples",
-        maps_folder="maps",
-        crops_folder="crops",
-        boxes_folder="boxes",
         a_r=aspect_ratio,
         attention=retained_attention,
     ):
+        originals_folder = self.imgs_test_path
+        maps_folder = os.path.join(os.path.dirname(originals_folder), "maps")
+        if not os.path.exists(maps_folder):
+            raise Exception(
+                f"Saliency mappings for the images in {originals_folder}"
+                " must be present in {maps_folder}.\n"
+                "Run this command - salmap.test(test_imgs_path=<original-images>) and try again!"
+            )
+        crops_folder = os.path.join(os.path.dirname(originals_folder), "crops")
+        boxes_folder = os.path.join(os.path.dirname(originals_folder), "boxes")
         batch_crop_images(
             originals_folder, maps_folder, crops_folder, boxes_folder, a_r, attention
         )
