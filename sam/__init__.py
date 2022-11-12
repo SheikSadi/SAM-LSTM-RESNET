@@ -136,7 +136,9 @@ class SalMap:
             callbacks=[
                 EarlyStopping(patience=3),
                 ModelCheckpoint(
-                    f"{checkpoint_path}/sam-resnet-{{epoch:02}}-{{val_loss:.4f}}.pkl",
+                    os.path.join(
+                        checkpoint_path, "sam-resnet-{epoch:02}-{val_loss:.4f}.pkl"
+                    ),
                     monitor="val_loss",
                     verbose=0,
                     save_best_only=True,
