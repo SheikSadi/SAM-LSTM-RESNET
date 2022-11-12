@@ -179,7 +179,7 @@ class SalMap:
             # all training will be visited twice
             steps_per_epoch=steps_per_epoch,
             validation_data=validation_gen,
-            validation_steps=len(imgs_val),
+            validation_steps=int(steps_per_epoch/3),
             callbacks=[
                 EarlyStopping(patience=3),
                 ModelCheckpoint(
