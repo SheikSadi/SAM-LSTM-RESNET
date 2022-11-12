@@ -112,13 +112,13 @@ class SalMap:
 
         print("Training SAM-ResNet")
         train_gen = generator(
-            b_s,
+            batch_size,
             imgs_train_path,
             maps_train_path,
             fixs_train_path,
         )
         validation_gen = generator(
-            b_s,
+            batch_size,
             imgs_val_path,
             maps_val_path,
             fixs_val_path,
