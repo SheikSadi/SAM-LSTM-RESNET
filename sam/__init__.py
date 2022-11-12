@@ -85,7 +85,9 @@ class SalMap:
 
         return images, maps, fixs
 
-    def train(self, dataset_path=dataset_path, checkpoint_path="weights/", n_epochs=nb_epoch):
+    def train(
+        self, dataset_path=dataset_path, checkpoint_path="weights/", n_epochs=nb_epoch
+    ):
         imgs_path = os.path.join(dataset_path, "images")
         maps_path = os.path.join(dataset_path, "maps")
         fixs_path = os.path.join(dataset_path, "fixations")
@@ -248,10 +250,12 @@ class SalMap:
             cv2.imwrite(map_path, res.astype(int))
 
     def batch_crop(
-        self,
-        a_r=aspect_ratio,
-        attention=retained_attention,
+        self, a_r=aspect_ratio, attention=retained_attention, maximizer=None
     ):
+        """
+        maximizer will receive the following positional arguments:
+        box_area, img_area, attention_kept, total_attention
+        """
         originals_folder = self.imgs_test_path
         maps_folder = os.path.join(os.path.dirname(originals_folder), "maps")
         if not os.path.exists(maps_folder):
@@ -262,6 +266,22 @@ class SalMap:
             )
         crops_folder = os.path.join(os.path.dirname(originals_folder), "crops")
         boxes_folder = os.path.join(os.path.dirname(originals_folder), "boxes")
-        batch_crop_images(
-            originals_folder, maps_folder, crops_folder, boxes_folder, a_r, attention
-        )
+        if callable(maximizer):
+            batch_crop_images(
+                originals_folder,
+                maps_folder,
+                crops_folder,
+                boxes_folder,
+                a_r,
+                attention,
+                maximizer,
+            )
+        else:
+            batch_crop_images(
+                originals_folder,
+                maps_folder,
+                crops_folder,
+                boxes_folder,
+                a_r,
+                attention,
+            )

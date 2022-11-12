@@ -27,16 +27,14 @@ def find_max_subarray(array: np.ndarray, window_w: int, threshold: float) -> tup
 
 
 def default_maximizer(box_area, img_area, attention_kept, total_attention):
-    area_factor = 1  # box_area / img_area
+    area_factor = box_area / img_area
     attention_factor = attention_kept / total_attention
     # We want to maximize this value
     factor = attention_factor / area_factor
     return int(factor * 1000)
 
 
-def find_best_rectangle(
-    array2d, asp_ratio, keep_attention, to_maximize=default_maximizer
-):
+def find_best_rectangle(array2d, asp_ratio, keep_attention, maximizer):
     """
     to_maximize can be user-defined function
     and it will take in 4 input arguments -
@@ -73,7 +71,7 @@ def find_best_rectangle(
         )
         if attention_kept > 0:
             box_area = window_w * window_h
-            factor = to_maximize(box_area, img_area, attention_kept, total_attention)
+            factor = maximizer(box_area, img_area, attention_kept, total_attention)
             if factor < 0:
                 raise KeyboardInterrupt("WTF!")
             elif factor > best_factor:
@@ -99,10 +97,11 @@ def crop(
     boxed_image_path,
     a_r,
     attention,
+    maximizer,
 ):
     salient_ndimage = cv2.imread(saliency_map_path, cv2.IMREAD_GRAYSCALE)
 
-    x, y, w, h = find_best_rectangle(salient_ndimage, a_r, attention)
+    x, y, w, h = find_best_rectangle(salient_ndimage, a_r, attention, maximizer)
 
     original_ndimage = cv2.imread(original_image_path, cv2.IMREAD_COLOR)
     cropped_ndimage = original_ndimage[y : y + h, x : x + w, :]
@@ -123,6 +122,7 @@ def batch_crop_images(
     boxes_folder,
     aspect_ratio,
     retained_attention,
+    maximizer=default_maximizer,
 ):
     for _dir in [crops_folder, boxes_folder]:
         if not os.path.exists(_dir):
@@ -142,6 +142,7 @@ def batch_crop_images(
                 box_file,
                 aspect_ratio,
                 retained_attention,
+                maximizer,
             )
             if crop_success:
                 print("Cropped and boxed %s successfully" % fname)
