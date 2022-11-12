@@ -104,6 +104,17 @@ class SalMap:
         maps_val_path = os.path.join(maps_path, "val")
         fixs_val_path = os.path.join(fixs_path, "val")
 
+        for path in [
+            imgs_train_path,
+            maps_train_path,
+            fixs_train_path,
+            imgs_val_path,
+            maps_val_path,
+            fixs_val_path,
+        ]:
+            if not os.path.exists(path):
+                raise Exception(f"Didn't find the {path}! Can't start training...")
+
         if nb_imgs_train % b_s != 0 or nb_imgs_val % b_s != 0:
             print(
                 "The number of training and validation images should be a multiple of the batch size."

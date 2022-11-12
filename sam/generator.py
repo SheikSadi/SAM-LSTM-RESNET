@@ -22,25 +22,34 @@ def generator(
     maps_path,
     fixs_path,
 ):
-    images = [
-        os.path.join(imgs_path, fname)
+    _images = {
+        fname.rsplit(".", 1)[0]: os.path.join(imgs_path, fname)
         for fname in os.listdir(imgs_path)
         if fname.endswith((".jpg", ".jpeg", ".png"))
-    ]
-    maps = [
-        os.path.join(maps_path, fname)
+    }
+    _maps = {
+        fname.rsplit(".", 1)[0]: os.path.join(maps_path, fname)
         for fname in os.listdir(maps_path)
         if fname.endswith((".jpg", ".jpeg", ".png"))
-    ]
-    fixs = [
-        os.path.join(fixs_path, fname)
+    }
+
+    _fixs = {
+        fname.rsplit(".", 1)[0]: os.path.join(fixs_path, fname)
         for fname in os.listdir(fixs_path)
         if fname.endswith(".mat")
-    ]
+    }
 
-    images.sort()
-    maps.sort()
-    fixs.sort()
+    images = []
+    maps = []
+    fixs = []
+
+    # make sure all files in images have corresponding files in maps and fixs
+    for fname in set(_images).intersection(_maps, _fixs):
+        images.append(_images[fname])
+        maps.append(_maps[fname])
+        fixs.append(_fixs[fname])
+
+    del _images, _fixs, _maps
 
     n_images = len(images)
 
