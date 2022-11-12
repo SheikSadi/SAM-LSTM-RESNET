@@ -26,6 +26,7 @@ from sam.config import (
     nb_gaussian,
     b_s,
     nb_epoch,
+    steps_per_epoch,
     aspect_ratio,
     retained_attention,
     DATASET_IMAGES_URL,
@@ -86,7 +87,7 @@ class SalMap:
         return images, maps, fixs
 
     def train(
-        self, dataset_path=dataset_path, checkpoint_path="weights/", n_epochs=nb_epoch
+        self, dataset_path=dataset_path, checkpoint_path="weights/", steps_per_epoch=steps_per_epoch
     ):
         imgs_path = os.path.join(dataset_path, "images")
         maps_path = os.path.join(dataset_path, "maps")
@@ -174,10 +175,11 @@ class SalMap:
         self.model.fit(
             train_gen,
             batch_size=b_s,
-            epochs=n_epochs,
-            steps_per_epoch=int(len(imgs_train) / b_s / n_epochs),
+            epochs=nb_epoch,
+            # all training will be visited twice
+            steps_per_epoch=steps_per_epoch,
             validation_data=validation_gen,
-            validation_steps=int(len(imgs_val) / b_s / n_epochs),
+            validation_steps=len(imgs_val),
             callbacks=[
                 EarlyStopping(patience=3),
                 ModelCheckpoint(

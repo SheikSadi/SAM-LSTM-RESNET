@@ -17,6 +17,8 @@ TH_WEIGHTS_PATH_NO_TOP = "https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/
 #########################################################################
 # batch size
 b_s = 1
+# steps per epoch
+steps_per_epoch = 500
 # number of rows of input images
 shape_r = 240
 # number of cols of input images
@@ -32,7 +34,7 @@ shape_c_out = 640
 # final upsampling factor
 upsampling_factor = 16
 # number of epochs
-nb_epoch = 10
+nb_epoch = 20
 # number of timestep
 nb_timestep = 4
 # number of learned priors
