@@ -1,8 +1,20 @@
 #########################################################################
+# RESOURCES URL														    #
+#########################################################################
+DATASET_IMAGES_URL = (
+    "https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/images.zip"
+)
+DATASET_MAPS_URL = (
+    "https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/maps.zip"
+)
+DATASET_FIXS_URL = (
+    "https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/fixations.zip"
+)
+SAM_RESNET_SALICON_2017_WEIGHTS = "https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/sam-resnet_salicon_weights.pkl"
+TH_WEIGHTS_PATH_NO_TOP = "https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/resnet50_weights_th_dim_ordering_th_kernels_notop.h5"
+#########################################################################
 # MODEL PARAMETERS														#
 #########################################################################
-# version (0 for SAM-VGG and 1 for SAM-ResNet)
-version = 1
 # batch size
 b_s = 1
 # number of rows of input images
@@ -34,18 +46,18 @@ aspect_ratio = 1.4444444444444444  # 260/180
 # TRAINING SETTINGS										            	#
 #########################################################################
 # path of training images
-imgs_train_path = "/path/to/training/images/"
+imgs_train_path = "/mnt/d/smart-cropping/salicon_dataset_2017/images/train/"
 # path of training maps
-maps_train_path = "/path/to/training/maps/"
+maps_train_path = "/mnt/d/smart-cropping/salicon_dataset_2017/maps/train/"
 # path of training fixation maps
-fixs_train_path = "/path/to/training/fixation/maps/"
+fixs_train_path = "/mnt/d/smart-cropping/salicon_dataset_2017/fixations/train/"
 # number of training images
 nb_imgs_train = 10000
 # path of validation images
-imgs_val_path = "/path/to/validation/images/"
+imgs_val_path = "/mnt/d/smart-cropping/salicon_dataset_2017/images/val/"
 # path of validation maps
-maps_val_path = "/path/to/validation/maps/"
+maps_val_path = "/mnt/d/smart-cropping/salicon_dataset_2017/maps/val/"
 # path of validation fixation maps
-fixs_val_path = "/path/to/validation/fixation/maps/"
+fixs_val_path = "/mnt/d/smart-cropping/salicon_dataset_2017/fixations/val/"
 # number of validation images
 nb_imgs_val = 5000

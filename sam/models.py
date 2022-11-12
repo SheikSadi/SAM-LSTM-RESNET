@@ -5,8 +5,6 @@ import keras.backend as K
 import numpy as np
 
 from sam.config import *
-
-# from sam.dcn_vgg import dcn_vgg
 from sam.dcn_resnet import dcn_resnet
 from sam.gaussian_prior import LearningPrior
 from sam.attentive_convlstm import AttentiveConvLSTM
@@ -187,39 +185,6 @@ def gaussian_priors_init(shape, name=None):
     means = np.random.uniform(low=0.3, high=0.7, size=shape[0] // 2)
     covars = np.random.uniform(low=0.05, high=0.3, size=shape[0] // 2)
     return K.variable(np.concatenate((means, covars), axis=0), name=name)
-
-
-# def sam_vgg(x):
-#     # Dilated Convolutional Network
-#     dcn = dcn_vgg(input_tensor=x[0])
-
-#     # Attentive Convolutional LSTM
-#     att_convlstm = Lambda(repeat, repeat_shape)(dcn.output)
-#     att_convlstm = AttentiveConvLSTM(
-#         nb_filters_in=512, nb_filters_out=512, nb_filters_att=512, nb_cols=3, nb_rows=3
-#     )(att_convlstm)
-
-#     # Learned Prior (1)
-#     priors1 = LearningPrior(nb_gaussian=nb_gaussian, init=gaussian_priors_init)(x[1])
-#     concateneted = merge([att_convlstm, priors1], mode="concat", concat_axis=1)
-#     learned_priors1 = Conv2D(
-#         512, (5, 5), padding="same", activation="relu", dilation_rate=(4, 4)
-#     )(concateneted)
-
-#     # Learned Prior (2)
-#     priors2 = LearningPrior(nb_gaussian=nb_gaussian, init=gaussian_priors_init)(x[1])
-#     concateneted = merge([learned_priors1, priors2], mode="concat", concat_axis=1)
-#     learned_priors2 = Conv2D(
-#         512, (5, 5), padding="same", activation="relu", dilation_rate=(4, 4)
-#     )(concateneted)
-
-#     # Final Convolutional Layer
-#     outs = Conv2D(1, (1, 1), padding="same", activation="relu")(
-#         learned_priors2
-#     )
-#     outs_up = Lambda(upsampling, upsampling_shape)(outs)
-
-#     return [outs_up, outs_up, outs_up]
 
 
 def sam_resnet(x):

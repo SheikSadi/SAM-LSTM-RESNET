@@ -61,35 +61,38 @@ def resize_fixation(img, rows=480, cols=640):
 
 def padding_fixation(img, shape_r=480, shape_c=640):
     img_padded = np.zeros((shape_r, shape_c))
-
     original_shape = img.shape
-    rows_rate = original_shape[0] / shape_r
-    cols_rate = original_shape[1] / shape_c
 
-    if rows_rate > cols_rate:
-        new_cols = (original_shape[1] * shape_r) // original_shape[0]
-        img = resize_fixation(img, rows=shape_r, cols=new_cols)
-        if new_cols > shape_c:
-            new_cols = shape_c
-        img_padded[
-            :,
-            ((img_padded.shape[1] - new_cols) // 2) : (
-                (img_padded.shape[1] - new_cols) // 2 + new_cols
-            ),
-        ] = img
+    if original_shape == img_padded.shape:
+        return img
     else:
-        new_rows = (original_shape[0] * shape_c) // original_shape[1]
-        img = resize_fixation(img, rows=new_rows, cols=shape_c)
-        if new_rows > shape_r:
-            new_rows = shape_r
-        img_padded[
-            ((img_padded.shape[0] - new_rows) // 2) : (
-                (img_padded.shape[0] - new_rows) // 2 + new_rows
-            ),
-            :,
-        ] = img
+        rows_rate = original_shape[0] / shape_r
+        cols_rate = original_shape[1] / shape_c
 
-    return img_padded
+        if rows_rate > cols_rate:
+            new_cols = (original_shape[1] * shape_r) // original_shape[0]
+            img = resize_fixation(img, rows=shape_r, cols=new_cols)
+            if new_cols > shape_c:
+                new_cols = shape_c
+            img_padded[
+                :,
+                ((img_padded.shape[1] - new_cols) // 2) : (
+                    (img_padded.shape[1] - new_cols) // 2 + new_cols
+                ),
+            ] = img
+        else:
+            new_rows = (original_shape[0] * shape_c) // original_shape[1]
+            img = resize_fixation(img, rows=new_rows, cols=shape_c)
+            if new_rows > shape_r:
+                new_rows = shape_r
+            img_padded[
+                ((img_padded.shape[0] - new_rows) // 2) : (
+                    (img_padded.shape[0] - new_rows) // 2 + new_rows
+                ),
+                :,
+            ] = img
+
+        return img_padded
 
 
 def preprocess_images(paths, shape_r, shape_c):
@@ -124,7 +127,15 @@ def preprocess_fixmaps(paths, shape_r, shape_c):
     ims = np.zeros((len(paths), 1, shape_r, shape_c))
 
     for i, path in enumerate(paths):
-        fix_map = scipy.io.loadmat(path)["I"]
+        matdata = scipy.io.loadmat(path)
+        imshape = matdata["resolution"][0]
+        fix_map = np.zeros(imshape)
+
+        fixations = np.vstack([fixation[0][2] for fixation in matdata["gaze"]])
+        xs = fixations[:, 0] - 1
+        ys = fixations[:, 1] - 1
+        fix_map[ys, xs] = 1
+
         ims[i, 0] = padding_fixation(fix_map, shape_r=shape_r, shape_c=shape_c)
 
     return ims

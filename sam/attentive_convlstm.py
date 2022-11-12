@@ -52,12 +52,12 @@ class AttentiveConvLSTM(Layer):
         self.states = [None, None]
         in_channels = input_shape[2]
 
-        def init_conv_weights(out_channels, name, bias=True):
+        def init_conv_weights(out_channels, name, init, bias=True):
             _kernel = self.add_weight(
                 f"{name}_kernel",
                 shape=[out_channels, in_channels, self.nb_rows, self.nb_cols],
                 trainable=True,
-                initializer=initializers.get(self.init),
+                initializer=initializers.get(init),
             )
             if bias:
                 _bias = self.add_weight(
@@ -70,21 +70,21 @@ class AttentiveConvLSTM(Layer):
                 _bias = tf.zeros(shape=[out_channels])
             return _kernel, _bias
 
-        self.Wa = init_conv_weights(self.nb_filters_att, "Wa")
-        self.Ua = init_conv_weights(self.nb_filters_att, "Ua")
-        self.Va = init_conv_weights(1, "Va", bias=False)
+        self.Wa = init_conv_weights(self.nb_filters_att, "Wa", self.init)
+        self.Ua = init_conv_weights(self.nb_filters_att, "Ua", self.init)
+        self.Va = init_conv_weights(1, "Va", self.attentive_init, bias=False)
 
-        self.Wi = init_conv_weights(self.nb_filters_out, "Wi")
-        self.Ui = init_conv_weights(self.nb_filters_out, "Ui")
+        self.Wi = init_conv_weights(self.nb_filters_out, "Wi", self.init)
+        self.Ui = init_conv_weights(self.nb_filters_out, "Ui", self.inner_init)
 
-        self.Wf = init_conv_weights(self.nb_filters_out, "Wf")
-        self.Uf = init_conv_weights(self.nb_filters_out, "Uf")
+        self.Wf = init_conv_weights(self.nb_filters_out, "Wf", self.init)
+        self.Uf = init_conv_weights(self.nb_filters_out, "Uf", self.inner_init)
 
-        self.Wc = init_conv_weights(self.nb_filters_out, "Wc")
-        self.Uc = init_conv_weights(self.nb_filters_out, "Uc")
+        self.Wc = init_conv_weights(self.nb_filters_out, "Wc", self.init)
+        self.Uc = init_conv_weights(self.nb_filters_out, "Uc", self.inner_init)
 
-        self.Wo = init_conv_weights(self.nb_filters_out, "Wo")
-        self.Uo = init_conv_weights(self.nb_filters_out, "Uo")
+        self.Wo = init_conv_weights(self.nb_filters_out, "Wo", self.init)
+        self.Uo = init_conv_weights(self.nb_filters_out, "Uo", self.inner_init)
 
     def preprocess_input(self, x):
         return x
@@ -106,8 +106,8 @@ class AttentiveConvLSTM(Layer):
         return kernelT_x_input + bias
 
     def step(self, X, states):
-        sigmoid = tf.keras.activations.sigmoid
-        tanh = tf.keras.activations.tanh
+        sigmoid = tf.math.sigmoid
+        tanh = tf.math.tanh
         conv = self.conv
 
         Ht_1 = states[0]
@@ -154,7 +154,7 @@ class AttentiveConvLSTM(Layer):
         )
 
         if len(last_output.shape) == 3:
-            last_output = K.expand_dims(last_output, axis=0)
+            last_output = tf.expand_dims(last_output, axis=0)
 
         return last_output
 

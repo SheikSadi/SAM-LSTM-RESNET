@@ -13,6 +13,7 @@ from keras.layers import (
 )
 from keras.models import Model
 from keras.utils import get_file
+from sam.config import TH_WEIGHTS_PATH_NO_TOP
 
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
@@ -25,24 +26,29 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
     conv_name_base = "res" + str(stage) + block + "_branch"
     bn_name_base = "bn" + str(stage) + block + "_branch"
 
-    x = Conv2D(nb_filter1, kernel_size=(1, 1), name=conv_name_base + "2a")(input_tensor)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2a")(x)
-    x = Activation("relu")(x)
+    x = Conv2D(
+        nb_filter1, kernel_size=(1, 1), name=conv_name_base + "2a", trainable=False
+    )(input_tensor)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2a", trainable=False)(x)
+    x = Activation("relu", trainable=False)(x)
 
     x = Conv2D(
         nb_filter2,
         kernel_size,
         padding="same",
         name=conv_name_base + "2b",
+        trainable=False,
     )(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2b")(x)
-    x = Activation("relu")(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2b", trainable=False)(x)
+    x = Activation("relu", trainable=False)(x)
 
-    x = Conv2D(nb_filter3, kernel_size=(1, 1), name=conv_name_base + "2c")(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2c")(x)
+    x = Conv2D(
+        nb_filter3, kernel_size=(1, 1), name=conv_name_base + "2c", trainable=False
+    )(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2c", trainable=False)(x)
 
     x = add([x, input_tensor])
-    x = Activation("relu")(x)
+    x = Activation("relu", trainable=False)(x)
     return x
 
 
@@ -57,30 +63,43 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
     bn_name_base = "bn" + str(stage) + block + "_branch"
 
     x = Conv2D(
-        nb_filter1, kernel_size=(1, 1), strides=strides, name=conv_name_base + "2a"
+        nb_filter1,
+        kernel_size=(1, 1),
+        strides=strides,
+        name=conv_name_base + "2a",
+        trainable=False,
     )(input_tensor)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2a")(x)
-    x = Activation("relu")(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2a", trainable=False)(x)
+    x = Activation("relu", trainable=False)(x)
 
     x = Conv2D(
         nb_filter2,
         kernel_size,
         padding="same",
         name=conv_name_base + "2b",
+        trainable=False,
     )(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2b")(x)
-    x = Activation("relu")(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2b", trainable=False)(x)
+    x = Activation("relu", trainable=False)(x)
 
-    x = Conv2D(nb_filter3, kernel_size=(1, 1), name=conv_name_base + "2c")(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2c")(x)
+    x = Conv2D(
+        nb_filter3, kernel_size=(1, 1), name=conv_name_base + "2c", trainable=False
+    )(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2c", trainable=False)(x)
 
     shortcut = Conv2D(
-        nb_filter3, kernel_size=(1, 1), strides=strides, name=conv_name_base + "1"
+        nb_filter3,
+        kernel_size=(1, 1),
+        strides=strides,
+        name=conv_name_base + "1",
+        trainable=False,
     )(input_tensor)
-    shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + "1")(shortcut)
+    shortcut = BatchNormalization(
+        axis=bn_axis, name=bn_name_base + "1", trainable=False
+    )(shortcut)
 
     x = add([x, shortcut])
-    x = Activation("relu")(x)
+    x = Activation("relu", trainable=False)(x)
     return x
 
 
@@ -96,9 +115,11 @@ def conv_block_atrous(
     conv_name_base = "res" + str(stage) + block + "_branch"
     bn_name_base = "bn" + str(stage) + block + "_branch"
 
-    x = Conv2D(nb_filter1, (1, 1), name=conv_name_base + "2a")(input_tensor)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2a")(x)
-    x = Activation("relu")(x)
+    x = Conv2D(nb_filter1, (1, 1), name=conv_name_base + "2a", trainable=False)(
+        input_tensor
+    )
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2a", trainable=False)(x)
+    x = Activation("relu", trainable=False)(x)
 
     x = Conv2D(
         nb_filter2,
@@ -106,18 +127,23 @@ def conv_block_atrous(
         padding="same",
         dilation_rate=dilation_rate,
         name=conv_name_base + "2b",
+        trainable=False,
     )(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2b")(x)
-    x = Activation("relu")(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2b", trainable=False)(x)
+    x = Activation("relu", trainable=False)(x)
 
-    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + "2c")(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2c")(x)
+    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + "2c", trainable=False)(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2c", trainable=False)(x)
 
-    shortcut = Conv2D(nb_filter3, (1, 1), name=conv_name_base + "1")(input_tensor)
-    shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + "1")(shortcut)
+    shortcut = Conv2D(nb_filter3, (1, 1), name=conv_name_base + "1", trainable=False)(
+        input_tensor
+    )
+    shortcut = BatchNormalization(
+        axis=bn_axis, name=bn_name_base + "1", trainable=False
+    )(shortcut)
 
     x = add([x, shortcut])
-    x = Activation("relu")(x)
+    x = Activation("relu", trainable=False)(x)
     return x
 
 
@@ -133,9 +159,11 @@ def identity_block_atrous(
     conv_name_base = "res" + str(stage) + block + "_branch"
     bn_name_base = "bn" + str(stage) + block + "_branch"
 
-    x = Conv2D(nb_filter1, kernel_size=(1, 1), name=conv_name_base + "2a")(input_tensor)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2a")(x)
-    x = Activation("relu")(x)
+    x = Conv2D(
+        nb_filter1, kernel_size=(1, 1), name=conv_name_base + "2a", trainable=False
+    )(input_tensor)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2a", trainable=False)(x)
+    x = Activation("relu", trainable=False)(x)
 
     x = Conv2D(
         nb_filter2,
@@ -143,15 +171,16 @@ def identity_block_atrous(
         dilation_rate=dilation_rate,
         padding="same",
         name=conv_name_base + "2b",
+        trainable=False,
     )(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2b")(x)
-    x = Activation("relu")(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2b", trainable=False)(x)
+    x = Activation("relu", trainable=False)(x)
 
-    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + "2c")(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2c")(x)
+    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + "2c", trainable=False)(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + "2c", trainable=False)(x)
 
     x = add([x, input_tensor])
-    x = Activation("relu")(x)
+    x = Activation("relu", trainable=False)(x)
     return x
 
 
@@ -169,11 +198,11 @@ def dcn_resnet(input_tensor=None):
     bn_axis = 1
 
     # conv_1
-    x = ZeroPadding2D((3, 3))(img_input)
-    x = Conv2D(64, (7, 7), strides=(2, 2), name="conv1")(x)
-    x = BatchNormalization(axis=bn_axis, name="bn_conv1")(x)
-    x = Activation("relu")(x)
-    x = MaxPooling2D((3, 3), strides=(2, 2), padding="same")(x)
+    x = ZeroPadding2D((3, 3), trainable=False)(img_input)
+    x = Conv2D(64, (7, 7), strides=(2, 2), name="conv1", trainable=False)(x)
+    x = BatchNormalization(axis=bn_axis, name="bn_conv1", trainable=False)(x)
+    x = Activation("relu", trainable=False)(x)
+    x = MaxPooling2D((3, 3), strides=(2, 2), padding="same", trainable=False)(x)
 
     # conv_2
     x = conv_block(x, 3, [64, 64, 256], stage=2, block="a", strides=(1, 1))
@@ -221,8 +250,6 @@ def dcn_resnet(input_tensor=None):
     model = Model(img_input, x)
 
     # Load weights
-    TH_WEIGHTS_PATH_NO_TOP = "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_th_dim_ordering_th_kernels_notop.h5"
-
     weights_path = get_file(
         "resnet50_weights_th_dim_ordering_th_kernels_notop.h5",
         TH_WEIGHTS_PATH_NO_TOP,

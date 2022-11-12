@@ -4,7 +4,7 @@ import os
 import tensorflow as tf
 from keras.optimizers import RMSprop
 
-# from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Input
 from keras.models import Model
 from keras.utils import get_file
@@ -15,120 +15,168 @@ from sam.models import (
     correlation_coefficient,
     nss,
     sam_resnet,
-    # sam_vgg
 )
 from sam.generator import generator, generator_test
 from sam.cropping import batch_crop_images
-from sam.config import *
+from sam.config import (
+    shape_r,
+    shape_c,
+    shape_r_gt,
+    shape_c_gt,
+    nb_gaussian,
+    nb_imgs_train,
+    nb_imgs_val,
+    b_s,
+    nb_epoch,
+    aspect_ratio,
+    retained_attention,
+    DATASET_IMAGES_URL,
+    DATASET_MAPS_URL,
+    DATASET_FIXS_URL,
+    SAM_RESNET_SALICON_2017_WEIGHTS,
+)
 
 
 tf.keras.backend.set_image_data_format(data_format="channels_first")
 
 
 class SalMap:
-    RESNET = 1
-    VGG = 0
-
-    def __init__(self, version=RESNET):
+    def __init__(self):
         self.x = Input((3, shape_r, shape_c))
         self.x_maps = Input((nb_gaussian, shape_r_gt, shape_c_gt))
-        self.version = version
 
     def compile(self):
-        if self.version == self.RESNET:
-            self.model = Model(
-                inputs=[self.x, self.x_maps], outputs=sam_resnet([self.x, self.x_maps])
+        self.model = Model(
+            inputs=[self.x, self.x_maps], outputs=sam_resnet([self.x, self.x_maps])
+        )
+
+        self.model.compile(
+            RMSprop(learning_rate=1e-4),
+            loss=[kl_divergence, correlation_coefficient, nss],
+        )
+
+    def train(self, dataset_path, checkpoint_path):
+        imgs_path = os.path.join(dataset_path, "images")
+        maps_path = os.path.join(dataset_path, "maps")
+        fixs_path = os.path.join(dataset_path, "fixations")
+
+        if not os.path.exists(imgs_path):
+            print(f"Didn't find {imgs_path}")
+            imgs_zip_path = get_file(
+                origin=DATASET_IMAGES_URL,
+                file_hash="2c72253ccb5288118864ebd2ab15a55e",
+                hash_algorithm="md5",
+                extract=True,
+                cache_dir=os.getcwd(),
+                cache_subdir=dataset_path,
+            )
+            imgs_path = imgs_zip_path.replace(".zip", "")
+
+        if not os.path.exists(maps_path):
+            print(f"Didn't find {maps_path}")
+            maps_zip_path = get_file(
+                origin=DATASET_MAPS_URL,
+                file_hash="5218595acfeec3b9fc0a4964d0566360",
+                hash_algorithm="md5",
+                extract=True,
+                cache_dir=os.getcwd(),
+                cache_subdir=dataset_path,
+            )
+            maps_path = maps_zip_path.replace(".zip", "")
+
+        if not os.path.exists(fixs_path):
+            print(f"Didn't find {fixs_path}")
+            fixs_zip_path = get_file(
+                origin=DATASET_FIXS_URL,
+                file_hash="0d6f4a54c3d36ccc85a74b1b4b40bed5",
+                hash_algorithm="md5",
+                extract=True,
+                cache_dir=os.getcwd(),
+                cache_subdir=dataset_path,
+            )
+            fixs_path = fixs_zip_path.replace(".zip", "")
+
+        imgs_train_path = os.path.join(imgs_path, "train")
+        maps_train_path = os.path.join(maps_path, "train")
+        fixs_train_path = os.path.join(fixs_path, "train")
+
+        imgs_val_path = os.path.join(imgs_path, "val")
+        maps_val_path = os.path.join(maps_path, "val")
+        fixs_val_path = os.path.join(fixs_path, "val")
+
+        if nb_imgs_train % b_s != 0 or nb_imgs_val % b_s != 0:
+            print(
+                "The number of training and validation images should be a multiple of the batch size."
+                " Please change your batch size in config.py accordingly."
+            )
+            exit()
+
+        print("Training SAM-ResNet")
+        train_gen = generator(
+            b_s,
+            imgs_train_path,
+            maps_train_path,
+            fixs_train_path,
+        )
+        validation_gen = generator(
+            b_s,
+            imgs_val_path,
+            maps_val_path,
+            fixs_val_path,
+        )
+        if not os.path.exists(checkpoint_path):
+            raise Exception(
+                f"Directory: {checkpoint_path} not found, first make sure it exists. Then, try again!"
             )
 
-            self.model.compile(
-                RMSprop(learning_rate=1e-4),
-                loss=[kl_divergence, correlation_coefficient, nss],
-            )
-        # elif self.version == self.VGG:
-        #     self.model = Model(
-        #         input=[self.x, self.x_maps], output=sam_vgg([self.x, self.x_maps])
-        #     )
-        #     print("Compiling SAM-VGG")
-        #     self.model.compile(
-        #         RMSprop(learning_rate=1e-4), loss=[kl_divergence, correlation_coefficient, nss]
-        #     )
-        else:
-            raise NotImplementedError
-
-    # def train(self):
-    #     if nb_imgs_train % b_s != 0 or nb_imgs_val % b_s != 0:
-    #         print(
-    #             "The number of training and validation images should be a multiple of the batch size. Please change your batch size in config.py accordingly."
-    #         )
-    #         exit()
-
-    #     if self.version == self.VGG:
-    #         print("Training SAM-VGG")
-    #         self.model.fit_generator(
-    #             generator(b_s=b_s),
-    #             nb_imgs_train,
-    #             nb_epoch=nb_epoch,
-    #             validation_data=generator(b_s=b_s, phase_gen="val"),
-    #             nb_val_samples=nb_imgs_val,
-    #             callbacks=[
-    #                 EarlyStopping(patience=3),
-    #                 ModelCheckpoint(
-    #                     "weights.sam-vgg.{epoch:02d}-{val_loss:.4f}.pkl",
-    #                     save_best_only=True,
-    #                 ),
-    #             ],
-    #         )
-    #     elif self.version == self.RESNET:
-    #         print("Training SAM-ResNet")
-    #         self.model.fit_generator(
-    #             generator(b_s=b_s),
-    #             nb_imgs_train,
-    #             nb_epoch=nb_epoch,
-    #             validation_data=generator(b_s=b_s, phase_gen="val"),
-    #             nb_val_samples=nb_imgs_val,
-    #             callbacks=[
-    #                 EarlyStopping(patience=3),
-    #                 ModelCheckpoint(
-    #                     "weights.sam-resnet.{epoch:02d}-{val_loss:.4f}.pkl",
-    #                     save_best_only=True,
-    #                 ),
-    #             ],
-    #         )
+        self.model.fit(
+            train_gen,
+            steps_per_epoch=nb_imgs_train,
+            batch_size=b_s,
+            epochs=nb_epoch,
+            validation_data=validation_gen,
+            validation_steps=nb_imgs_val,
+            callbacks=[
+                EarlyStopping(patience=3),
+                ModelCheckpoint(
+                    f"{checkpoint_path}/sam-resnet-{{epoch:02}}-{{val_loss:.4f}}.pkl",
+                    monitor="val_loss",
+                    verbose=0,
+                    save_best_only=True,
+                    save_weights_only=False,
+                    mode="auto",
+                    save_freq="epoch",
+                ),
+            ],
+        )
 
     def load_weights(self, weights_dir=None):
         if not weights_dir:
             weights_dir = os.path.join(os.getcwd(), "weights")
 
         if not os.path.exists(weights_dir):
-            SAM_RESNET_SALICON_2017_WEIGHTS = "https://github.com/marcellacornia/sam/releases/download/1.0/sam-resnet_salicon2017_weights.pkl"
             print(f"Weights not found in {weights_dir}.")
             weights_dir = get_file(
                 "sam-resnet_salicon_weights.pkl",
                 SAM_RESNET_SALICON_2017_WEIGHTS,
+                cache_dir=os.getcwd(),
                 cache_subdir="weights",
                 file_hash="92b5f89fd34a3968776a5c4327efb32c",
             )
 
-        if self.version == self.RESNET:
-            self.model.load_weights(weights_dir)
-        # elif self.version == self.VGG:
-        #     vgg_weights_path = os.path.join(
-        #         weights_dir, "sam-vgg_salicon_weights.pkl"
-        #     )
-        #     print("Loading SAM-VGG weights")
-        #     self.model.load_weights(vgg_weights_path)
+        self.model.load_weights(weights_dir)
 
-    def test(self, test_imgs_path="/samples"):
-        if test_imgs_path.startswith("/"):
-            test_imgs_path = test_imgs_path.rsplit("/", 1)[1]
+    def test(self, imgs_test_path="/samples"):
+        if imgs_test_path.startswith("/"):
+            imgs_test_path = imgs_test_path.rsplit("/", 1)[1]
         # Output Folder Path
-        if os.path.exists(test_imgs_path):
-            self.imgs_test_path = test_imgs_path
+        if os.path.exists(imgs_test_path):
+            self.imgs_test_path = imgs_test_path
         else:
-            self.imgs_test_path = os.path.join(os.getcwd(), test_imgs_path)
+            self.imgs_test_path = os.path.join(os.getcwd(), imgs_test_path)
         if not os.path.exists(self.imgs_test_path):
             raise Exception(
-                f"Couldn't find the directory {test_imgs_path} or {self.imgs_test_path}"
+                f"Couldn't find the directory {imgs_test_path} or {self.imgs_test_path}"
             )
 
         maps_folder = os.path.join(os.path.dirname(self.imgs_test_path), "maps")
@@ -177,7 +225,7 @@ class SalMap:
             raise Exception(
                 f"Saliency mappings for the images in {originals_folder}"
                 " must be present in {maps_folder}.\n"
-                "Run this command - salmap.test(test_imgs_path=<original-images>) and try again!"
+                "Run this command - salmap.test(imgs_test_path=<original-images>) and try again!"
             )
         crops_folder = os.path.join(os.path.dirname(originals_folder), "crops")
         boxes_folder = os.path.join(os.path.dirname(originals_folder), "boxes")
