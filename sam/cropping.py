@@ -25,20 +25,7 @@ def find_max_subarray(array: np.ndarray, window_w: int, threshold: float) -> tup
     return start_idx, best_sum
 
 
-def default_maximizer(box_area, img_area, attention_kept, total_attention):
-    area_factor = box_area / img_area
-    attention_factor = attention_kept / total_attention
-    # We want to maximize this value
-    factor = attention_factor / area_factor
-    return int(factor * 1000)
-
-
-def find_best_rectangle(array2d, asp_ratio, keep_attention, maximizer):
-    """
-    to_maximize can be user-defined function
-    and it will take in 4 input arguments -
-    box_area, img_area, attention_kept, total_attention
-    """
+def find_best_rectangle(array2d, asp_ratio, keep_attention):
     array2d_hcum = np.pad(np.cumsum(array2d, axis=0), pad_width=[(1, 0), (0, 0)])
     img_h, img_w = array2d.shape
     img_area = img_h * img_w
@@ -50,7 +37,7 @@ def find_best_rectangle(array2d, asp_ratio, keep_attention, maximizer):
     y_start = 0
     min_height = 1
     y_finish = y_start + min_height
-    best_factor = -1
+    best_area = img_area
 
     while True:
         window_h = y_finish - y_start
@@ -70,11 +57,10 @@ def find_best_rectangle(array2d, asp_ratio, keep_attention, maximizer):
         )
         if attention_kept > 0:
             box_area = window_w * window_h
-            factor = maximizer(box_area, img_area, attention_kept, total_attention)
-            if factor < 0:
-                raise KeyboardInterrupt("WTF!")
-            elif factor > best_factor:
-                best_factor = factor
+            if (box_area < best_area) or (
+                box_area == best_area and attention_kept > best_attention
+            ):
+                best_area = box_area
                 x, y, w, h = x_start, y_start, window_w, window_h
                 best_attention = attention_kept
             y_start += 1
@@ -96,11 +82,10 @@ def crop(
     boxed_image_path,
     a_r,
     attention,
-    maximizer,
 ):
     salient_ndimage = cv2.imread(saliency_map_path, cv2.IMREAD_GRAYSCALE)
 
-    x, y, w, h = find_best_rectangle(salient_ndimage, a_r, attention, maximizer)
+    x, y, w, h = find_best_rectangle(salient_ndimage, a_r, attention)
 
     original_ndimage = cv2.imread(original_image_path, cv2.IMREAD_COLOR)
     cropped_ndimage = original_ndimage[y : y + h, x : x + w, :]
@@ -121,7 +106,6 @@ def batch_crop_images(
     boxes_folder,
     aspect_ratio,
     retained_attention,
-    maximizer=default_maximizer,
 ):
     for _dir in [crops_folder, boxes_folder]:
         if not os.path.exists(_dir):
@@ -141,7 +125,6 @@ def batch_crop_images(
                 box_file,
                 aspect_ratio,
                 retained_attention,
-                maximizer,
             )
             if crop_success:
                 print("Cropped and boxed %s successfully" % fname)

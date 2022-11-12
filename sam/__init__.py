@@ -41,12 +41,17 @@ tf.keras.backend.set_image_data_format(data_format="channels_first")
 
 
 class SalMap:
-    def __init__(self):
+    def __init__(self, asp_ratio=aspect_ratio, threshold_attention=retained_attention):
+        self.asp_ratio = asp_ratio
+        self.threshold_attention = threshold_attention
+
         self.x = Input((3, shape_r, shape_c))
         self.x_maps = Input((nb_gaussian, shape_r_gt, shape_c_gt))
+
         self.model = Model(
             inputs=[self.x, self.x_maps], outputs=sam_resnet([self.x, self.x_maps])
         )
+
         self.model.compile(
             RMSprop(learning_rate=1e-4),
             loss=[kl_divergence, correlation_coefficient, nss],
@@ -87,7 +92,10 @@ class SalMap:
         return images, maps, fixs
 
     def train(
-        self, dataset_path=dataset_path, checkpoint_path="weights/", steps_per_epoch=steps_per_epoch
+        self,
+        dataset_path=dataset_path,
+        checkpoint_path="weights/",
+        steps_per_epoch=steps_per_epoch,
     ):
         imgs_path = os.path.join(dataset_path, "images")
         maps_path = os.path.join(dataset_path, "maps")
@@ -179,7 +187,7 @@ class SalMap:
             # all training will be visited twice
             steps_per_epoch=steps_per_epoch,
             validation_data=validation_gen,
-            validation_steps=int(steps_per_epoch/3),
+            validation_steps=int(steps_per_epoch / 3),
             callbacks=[
                 EarlyStopping(patience=3),
                 ModelCheckpoint(
@@ -251,13 +259,9 @@ class SalMap:
             map_path = os.path.join(maps_folder, fname)
             cv2.imwrite(map_path, res.astype(int))
 
-    def batch_crop(
-        self, a_r=aspect_ratio, attention=retained_attention, maximizer=None
-    ):
-        """
-        maximizer will receive the following positional arguments:
-        box_area, img_area, attention_kept, total_attention
-        """
+        self.batch_crop()
+
+    def batch_crop(self, a_r=aspect_ratio, attention=retained_attention):
         originals_folder = self.imgs_test_path
         maps_folder = os.path.join(os.path.dirname(originals_folder), "maps")
         if not os.path.exists(maps_folder):
@@ -268,22 +272,12 @@ class SalMap:
             )
         crops_folder = os.path.join(os.path.dirname(originals_folder), "crops")
         boxes_folder = os.path.join(os.path.dirname(originals_folder), "boxes")
-        if callable(maximizer):
-            batch_crop_images(
-                originals_folder,
-                maps_folder,
-                crops_folder,
-                boxes_folder,
-                a_r,
-                attention,
-                maximizer,
-            )
-        else:
-            batch_crop_images(
-                originals_folder,
-                maps_folder,
-                crops_folder,
-                boxes_folder,
-                a_r,
-                attention,
-            )
+
+        batch_crop_images(
+            originals_folder,
+            maps_folder,
+            crops_folder,
+            boxes_folder,
+            self.asp_ratio,
+            self.threshold_attention,
+        )
