@@ -2,7 +2,6 @@ import os
 import numpy as np
 import cv2
 import math
-from sam.config import *
 
 
 def find_max_subarray(array: np.ndarray, window_w: int, threshold: float) -> tuple:
