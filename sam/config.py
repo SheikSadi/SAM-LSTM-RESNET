@@ -51,13 +51,9 @@ imgs_train_path = "/mnt/d/smart-cropping/salicon_dataset_2017/images/train/"
 maps_train_path = "/mnt/d/smart-cropping/salicon_dataset_2017/maps/train/"
 # path of training fixation maps
 fixs_train_path = "/mnt/d/smart-cropping/salicon_dataset_2017/fixations/train/"
-# number of training images
-nb_imgs_train = 10000
 # path of validation images
 imgs_val_path = "/mnt/d/smart-cropping/salicon_dataset_2017/images/val/"
 # path of validation maps
 maps_val_path = "/mnt/d/smart-cropping/salicon_dataset_2017/maps/val/"
 # path of validation fixation maps
 fixs_val_path = "/mnt/d/smart-cropping/salicon_dataset_2017/fixations/val/"
-# number of validation images
-nb_imgs_val = 5000

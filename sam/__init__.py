@@ -24,8 +24,6 @@ from sam.config import (
     shape_r_gt,
     shape_c_gt,
     nb_gaussian,
-    nb_imgs_train,
-    nb_imgs_val,
     b_s,
     nb_epoch,
     aspect_ratio,
@@ -44,18 +42,15 @@ class SalMap:
     def __init__(self):
         self.x = Input((3, shape_r, shape_c))
         self.x_maps = Input((nb_gaussian, shape_r_gt, shape_c_gt))
-
-    def compile(self):
         self.model = Model(
             inputs=[self.x, self.x_maps], outputs=sam_resnet([self.x, self.x_maps])
         )
-
         self.model.compile(
             RMSprop(learning_rate=1e-4),
             loss=[kl_divergence, correlation_coefficient, nss],
         )
 
-    def train(self, dataset_path, checkpoint_path):
+    def train(self, dataset_path, checkpoint_path, batch_size=b_s):
         imgs_path = os.path.join(dataset_path, "images")
         maps_path = os.path.join(dataset_path, "maps")
         fixs_path = os.path.join(dataset_path, "fixations")
@@ -115,13 +110,6 @@ class SalMap:
             if not os.path.exists(path):
                 raise Exception(f"Didn't find the {path}! Can't start training...")
 
-        if nb_imgs_train % b_s != 0 or nb_imgs_val % b_s != 0:
-            print(
-                "The number of training and validation images should be a multiple of the batch size."
-                " Please change your batch size in config.py accordingly."
-            )
-            exit()
-
         print("Training SAM-ResNet")
         train_gen = generator(
             b_s,
@@ -142,11 +130,9 @@ class SalMap:
 
         self.model.fit(
             train_gen,
-            steps_per_epoch=nb_imgs_train,
             batch_size=b_s,
             epochs=nb_epoch,
             validation_data=validation_gen,
-            validation_steps=nb_imgs_val,
             callbacks=[
                 EarlyStopping(patience=3),
                 ModelCheckpoint(
@@ -161,23 +147,34 @@ class SalMap:
             ],
         )
 
-    def load_weights(self, weights_dir=None):
-        if not weights_dir:
-            weights_dir = os.path.join(os.getcwd(), "weights")
+    def load_weights(self, weights_dir):
+        if weights_dir:
+            fname = os.path.basename(weights_dir)
+            if not weights_dir.startswith("/"):
+                weights_dir = f"/{weights_dir}"
+            dirname = os.path.dirname(weights_dir)
+            cache_subdir = os.path.basename(dirname)
+            cache_dir = os.path.dirname(dirname)
+            if cache_dir == "/":
+                cache_dir = os.getcwd()
+        else:
+            fname = "sam-resnet_salicon_weights.pkl"
+            cache_dir = None
+            cache_subdir = "weights"
 
-        if not os.path.exists(weights_dir):
-            print(f"Weights not found in {weights_dir}.")
-            weights_dir = get_file(
-                "sam-resnet_salicon_weights.pkl",
-                SAM_RESNET_SALICON_2017_WEIGHTS,
-                cache_dir=os.getcwd(),
-                cache_subdir="weights",
-                file_hash="92b5f89fd34a3968776a5c4327efb32c",
-            )
+        weights_dir = get_file(
+            fname,
+            SAM_RESNET_SALICON_2017_WEIGHTS,
+            cache_subdir=cache_subdir,
+            file_hash="92b5f89fd34a3968776a5c4327efb32c",
+            cache_dir=cache_dir,
+        )
 
         self.model.load_weights(weights_dir)
 
-    def test(self, imgs_test_path="/samples"):
+    def predict_maps(self, imgs_test_path="/samples", batch_size=b_s, weights_dir=None):
+        self.load_weights(weights_dir)
+
         if imgs_test_path.startswith("/"):
             imgs_test_path = imgs_test_path.rsplit("/", 1)[1]
         # Output Folder Path
@@ -197,23 +194,15 @@ class SalMap:
         file_names = [
             fname
             for fname in os.listdir(self.imgs_test_path)
-            if (
-                fname.endswith((".jpg", ".jpeg", ".png"))
-                and fname not in os.listdir(maps_folder)
-            )
+            if fname.endswith((".jpg", ".jpeg", ".png"))
         ]
         file_names.sort()
-        nb_imgs_test = len(file_names)
-
-        if nb_imgs_test % b_s != 0:
-            print(
-                "The number of test images should be a multiple of the batch size. Please change your batch size in config.py accordingly."
-            )
-            exit()
 
         print("Predicting saliency maps for " + self.imgs_test_path)
         predictions = self.model.predict(
-            generator_test(b_s=b_s, imgs_test_path=self.imgs_test_path), nb_imgs_test
+            generator_test(
+                batch_size, imgs_test_path=self.imgs_test_path, img_fnames=file_names
+            )
         )[0]
 
         for pred, fname in zip(predictions, file_names):

@@ -17,7 +17,7 @@ from sam.utilities import (
 
 
 def generator(
-    b_s,
+    batch_size,
     imgs_path,
     maps_path,
     fixs_path,
@@ -53,15 +53,25 @@ def generator(
 
     n_images = len(images)
 
-    gaussian = np.zeros((b_s, nb_gaussian, shape_r_gt, shape_c_gt))
+    if n_images % batch_size != 0:
+        raise Exception(
+            f"The number (in your case: {n_images}) of training/validation images "
+            "should be a multiple of the batch size. Please change the batch size."
+        )
+
+    gaussian = np.zeros((batch_size, nb_gaussian, shape_r_gt, shape_c_gt))
 
     counter = 0
     img_yielded = 0
     while True:
-        X = (preprocess_images(images[counter : counter + b_s], shape_r, shape_c),)
-        Y = preprocess_maps(maps[counter : counter + b_s], shape_r_out, shape_c_out)
+        X = (
+            preprocess_images(images[counter : counter + batch_size], shape_r, shape_c),
+        )
+        Y = preprocess_maps(
+            maps[counter : counter + batch_size], shape_r_out, shape_c_out
+        )
         Y_fix = preprocess_fixmaps(
-            fixs[counter : counter + b_s], shape_r_out, shape_c_out
+            fixs[counter : counter + batch_size], shape_r_out, shape_c_out
         )
         yield [X, gaussian], [Y, Y, Y_fix]
 
@@ -69,25 +79,25 @@ def generator(
         if img_yielded == n_images:
             break
         else:
-            counter = (counter + b_s) % n_images
+            counter = (counter + batch_size) % n_images
 
 
-def generator_test(b_s, imgs_test_path):
-    images = [
-        os.path.abspath(os.path.join(imgs_test_path, fname))
-        for fname in os.listdir(imgs_test_path)
-        if fname.endswith((".jpg", ".jpeg", ".png"))
-    ]
-    images.sort()
-    n_images = len(images)
-    gaussian = np.zeros((b_s, nb_gaussian, shape_r_gt, shape_c_gt))
+def generator_test(batch_size, imgs_test_path, img_fnames):
+    n_images = len(img_fnames)
+    n_images = int(n_images / batch_size) * batch_size
+
+    images = [os.path.join(imgs_test_path, fname) for fname in img_fnames]
+
+    gaussian = np.zeros((batch_size, nb_gaussian, shape_r_gt, shape_c_gt))
 
     counter = 0
     img_yielded = 0
     while True:
         yield [
             [
-                preprocess_images(images[counter : counter + b_s], shape_r, shape_c),
+                preprocess_images(
+                    images[counter : counter + batch_size], shape_r, shape_c
+                ),
                 gaussian,
             ]
         ]
@@ -95,4 +105,4 @@ def generator_test(b_s, imgs_test_path):
         if img_yielded == n_images:
             break
         else:
-            counter = (counter + b_s) % n_images
+            counter = (counter + batch_size) % n_images
