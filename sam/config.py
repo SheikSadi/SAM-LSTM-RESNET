@@ -46,14 +46,4 @@ aspect_ratio = 1.4444444444444444  # 260/180
 # TRAINING SETTINGS										            	#
 #########################################################################
 # path of training images
-imgs_train_path = "/mnt/d/smart-cropping/salicon_dataset_2017/images/train/"
-# path of training maps
-maps_train_path = "/mnt/d/smart-cropping/salicon_dataset_2017/maps/train/"
-# path of training fixation maps
-fixs_train_path = "/mnt/d/smart-cropping/salicon_dataset_2017/fixations/train/"
-# path of validation images
-imgs_val_path = "/mnt/d/smart-cropping/salicon_dataset_2017/images/val/"
-# path of validation maps
-maps_val_path = "/mnt/d/smart-cropping/salicon_dataset_2017/maps/val/"
-# path of validation fixation maps
-fixs_val_path = "/mnt/d/smart-cropping/salicon_dataset_2017/fixations/val/"
+dataset_path = "/mnt/d/smart-cropping/salicon_dataset_2017/"

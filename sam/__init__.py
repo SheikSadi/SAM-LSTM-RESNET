@@ -32,6 +32,7 @@ from sam.config import (
     DATASET_MAPS_URL,
     DATASET_FIXS_URL,
     SAM_RESNET_SALICON_2017_WEIGHTS,
+    dataset_path,
 )
 
 
@@ -48,9 +49,43 @@ class SalMap:
         self.model.compile(
             RMSprop(learning_rate=1e-4),
             loss=[kl_divergence, correlation_coefficient, nss],
+            loss_weights=[10, -2, -1],
         )
 
-    def train(self, dataset_path, checkpoint_path, batch_size=b_s):
+    @staticmethod
+    def get_valid_images(imgs_path, maps_path, fixs_path):
+        _images = {
+            fname.rsplit(".", 1)[0]: os.path.join(imgs_path, fname)
+            for fname in os.listdir(imgs_path)
+            if fname.endswith((".jpg", ".jpeg", ".png"))
+        }
+        _maps = {
+            fname.rsplit(".", 1)[0]: os.path.join(maps_path, fname)
+            for fname in os.listdir(maps_path)
+            if fname.endswith((".jpg", ".jpeg", ".png"))
+        }
+
+        _fixs = {
+            fname.rsplit(".", 1)[0]: os.path.join(fixs_path, fname)
+            for fname in os.listdir(fixs_path)
+            if fname.endswith(".mat")
+        }
+
+        images = []
+        maps = []
+        fixs = []
+
+        # make sure all files in images have corresponding files in maps and fixs
+        for fname in set(_images).intersection(_maps, _fixs):
+            images.append(_images[fname])
+            maps.append(_maps[fname])
+            fixs.append(_fixs[fname])
+
+        del _images, _maps, _fixs
+
+        return images, maps, fixs
+
+    def train(self, dataset_path=dataset_path, checkpoint_path="weights/", n_epochs=nb_epoch):
         imgs_path = os.path.join(dataset_path, "images")
         maps_path = os.path.join(dataset_path, "maps")
         fixs_path = os.path.join(dataset_path, "fixations")
@@ -110,18 +145,24 @@ class SalMap:
             if not os.path.exists(path):
                 raise Exception(f"Didn't find the {path}! Can't start training...")
 
+        imgs_train, maps_train, fixs_train = self.get_valid_images(
+            imgs_train_path, maps_train_path, fixs_train_path
+        )
+
         print("Training SAM-ResNet")
         train_gen = generator(
-            batch_size,
-            imgs_train_path,
-            maps_train_path,
-            fixs_train_path,
+            imgs_train,
+            maps_train,
+            fixs_train,
+        )
+
+        imgs_val, maps_val, fixs_val = self.get_valid_images(
+            imgs_val_path, maps_val_path, fixs_val_path
         )
         validation_gen = generator(
-            batch_size,
-            imgs_val_path,
-            maps_val_path,
-            fixs_val_path,
+            imgs_val,
+            maps_val,
+            fixs_val,
         )
         if not os.path.exists(checkpoint_path):
             raise Exception(
@@ -131,18 +172,18 @@ class SalMap:
         self.model.fit(
             train_gen,
             batch_size=b_s,
-            epochs=nb_epoch,
+            epochs=n_epochs,
+            steps_per_epoch=int(len(imgs_train) / b_s / nb_epoch),
             validation_data=validation_gen,
+            validation_steps=int(len(imgs_val) / b_s / nb_epoch),
             callbacks=[
                 EarlyStopping(patience=3),
                 ModelCheckpoint(
-                    os.path.join(
-                        checkpoint_path, "sam-resnet-{epoch:02}-{val_loss:.4f}.pkl"
-                    ),
+                    os.path.join(checkpoint_path, "sam-resnet-salicon.h5"),
                     monitor="val_loss",
                     verbose=0,
                     save_best_only=True,
-                    save_weights_only=False,
+                    save_weights_only=True,
                     mode="auto",
                     save_freq="epoch",
                 ),
@@ -151,30 +192,22 @@ class SalMap:
 
     def load_weights(self, weights_dir):
         if weights_dir:
-            fname = os.path.basename(weights_dir)
-            if not weights_dir.startswith("/"):
-                weights_dir = f"/{weights_dir}"
-            dirname = os.path.dirname(weights_dir)
-            cache_subdir = os.path.basename(dirname)
-            cache_dir = os.path.dirname(dirname)
-            if cache_dir == "/":
-                cache_dir = os.getcwd()
+            if not os.path.exists(weights_dir):
+                weights_dir = None
         else:
             fname = "sam-resnet_salicon_weights.pkl"
-            cache_dir = None
             cache_subdir = "weights"
 
-        weights_dir = get_file(
-            fname,
-            SAM_RESNET_SALICON_2017_WEIGHTS,
-            cache_subdir=cache_subdir,
-            file_hash="92b5f89fd34a3968776a5c4327efb32c",
-            cache_dir=cache_dir,
-        )
+            weights_dir = get_file(
+                fname,
+                SAM_RESNET_SALICON_2017_WEIGHTS,
+                cache_subdir=cache_subdir,
+                file_hash="92b5f89fd34a3968776a5c4327efb32c",
+            )
 
         self.model.load_weights(weights_dir)
 
-    def predict_maps(self, imgs_test_path="/samples", batch_size=b_s, weights_dir=None):
+    def predict_maps(self, imgs_test_path="/samples", weights_dir=None):
         self.load_weights(weights_dir)
 
         if imgs_test_path.startswith("/"):
@@ -202,9 +235,7 @@ class SalMap:
 
         print("Predicting saliency maps for " + self.imgs_test_path)
         predictions = self.model.predict(
-            generator_test(
-                batch_size, imgs_test_path=self.imgs_test_path, img_fnames=file_names
-            )
+            generator_test(file_names, imgs_test_path), steps=len(file_names)
         )[0]
 
         for pred, fname in zip(predictions, file_names):

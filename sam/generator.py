@@ -8,6 +8,7 @@ from sam.config import (
     shape_c,
     shape_r_out,
     shape_c_out,
+    b_s,
 )
 from sam.utilities import (
     preprocess_images,
@@ -17,39 +18,11 @@ from sam.utilities import (
 
 
 def generator(
-    batch_size,
-    imgs_path,
-    maps_path,
-    fixs_path,
+    images,
+    maps,
+    fixs,
 ):
-    _images = {
-        fname.rsplit(".", 1)[0]: os.path.join(imgs_path, fname)
-        for fname in os.listdir(imgs_path)
-        if fname.endswith((".jpg", ".jpeg", ".png"))
-    }
-    _maps = {
-        fname.rsplit(".", 1)[0]: os.path.join(maps_path, fname)
-        for fname in os.listdir(maps_path)
-        if fname.endswith((".jpg", ".jpeg", ".png"))
-    }
-
-    _fixs = {
-        fname.rsplit(".", 1)[0]: os.path.join(fixs_path, fname)
-        for fname in os.listdir(fixs_path)
-        if fname.endswith(".mat")
-    }
-
-    images = []
-    maps = []
-    fixs = []
-
-    # make sure all files in images have corresponding files in maps and fixs
-    for fname in set(_images).intersection(_maps, _fixs):
-        images.append(_images[fname])
-        maps.append(_maps[fname])
-        fixs.append(_fixs[fname])
-
-    del _images, _fixs, _maps
+    batch_size = b_s
 
     n_images = len(images)
 
@@ -82,11 +55,11 @@ def generator(
             counter = (counter + batch_size) % n_images
 
 
-def generator_test(batch_size, imgs_test_path, img_fnames):
-    n_images = len(img_fnames)
-    n_images = int(n_images / batch_size) * batch_size
+def generator_test(fnames, images_path):
+    batch_size = b_s
+    images = [os.path.join(images_path, fname) for fname in fnames]
 
-    images = [os.path.join(imgs_test_path, fname) for fname in img_fnames]
+    n_images = len(images)
 
     gaussian = np.zeros((batch_size, nb_gaussian, shape_r_gt, shape_c_gt))
 

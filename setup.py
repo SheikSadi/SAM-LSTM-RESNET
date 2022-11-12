@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="sam_lstm",
+    name="sam",
     url="https://github.com/SheikSadi/SAM-LSTM-RESNET.git",
     author="SheikSadi",
     author_email="biis.saadi@gmail.com",
