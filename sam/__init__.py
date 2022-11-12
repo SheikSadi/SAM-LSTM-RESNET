@@ -173,9 +173,9 @@ class SalMap:
             train_gen,
             batch_size=b_s,
             epochs=n_epochs,
-            steps_per_epoch=int(len(imgs_train) / b_s / nb_epoch),
+            steps_per_epoch=int(len(imgs_train) / b_s / n_epochs),
             validation_data=validation_gen,
-            validation_steps=int(len(imgs_val) / b_s / nb_epoch),
+            validation_steps=int(len(imgs_val) / b_s / n_epochs),
             callbacks=[
                 EarlyStopping(patience=3),
                 ModelCheckpoint(
