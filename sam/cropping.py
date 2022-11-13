@@ -25,7 +25,7 @@ def find_max_subarray(array: np.ndarray, window_w: int, threshold: float) -> tup
     return start_idx, best_sum
 
 
-def find_best_rectangle(array2d, asp_ratio, keep_attention):
+def find_rectangle(array2d, asp_ratio, keep_attention):
     array2d_hcum = np.pad(np.cumsum(array2d, axis=0), pad_width=[(1, 0), (0, 0)])
     img_h, img_w = array2d.shape
     img_area = img_h * img_w
@@ -38,6 +38,7 @@ def find_best_rectangle(array2d, asp_ratio, keep_attention):
     min_height = 1
     y_finish = y_start + min_height
     best_area = img_area
+    failedToFind = True
 
     while True:
         window_h = y_finish - y_start
@@ -63,15 +64,39 @@ def find_best_rectangle(array2d, asp_ratio, keep_attention):
                 best_area = box_area
                 x, y, w, h = x_start, y_start, window_w, window_h
                 best_attention = attention_kept
+                failedToFind = False
             y_start += 1
         else:
             y_finish += 1
 
-    print(
-        f"Attention kept: {round(best_attention/total_attention*100,2)}% "
-        f"at an area: {round(w*h/img_area*100,2)}%"
-    )
+    attention_factor = best_attention / total_attention
+    area_factor = w * h / img_area
 
+    if failedToFind:
+        return {}
+    else:
+        return {
+            "coords": (x, y, w, h),
+            "area": area_factor,
+            "attention": attention_factor,
+        }
+
+
+def find_best_rectangle(
+    salient_ndimage, a_r, min_attention, step=0.02, alpha=8, beta=3
+):
+    results = {}
+    attention = 1
+    count = 0
+    while attention >= min_attention:
+        attention -= step * (2**count)
+        count += 1
+        result = find_rectangle(salient_ndimage, a_r, attention)
+        if result:
+            score = alpha ** (result["attention"]) / beta ** (result["area"])
+            results[score] = result.pop("coords")
+
+    x, y, w, h = results[sorted(results)[-1]]
     return x, y, w, h
 
 

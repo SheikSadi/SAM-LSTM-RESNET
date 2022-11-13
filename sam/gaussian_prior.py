@@ -20,7 +20,7 @@ class LearningPrior(Layer):
         W_regularizer=None,
         activity_regularizer=None,
         W_constraint=None,
-        **kwargs
+        **kwargs,
     ):
         self.nb_gaussian = nb_gaussian
         self.init = initializers.get(init)
@@ -35,27 +35,18 @@ class LearningPrior(Layer):
         super(LearningPrior, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        self.W_shape = (self.nb_gaussian * 4,)
-        self.W = self.init(self.W_shape, name="{}_W".format(self.name))
-
-        self._trainable_weights = [self.W]
-
-        self.regularizers = []
-        if self.W_regularizer:
-            self.W_regularizer.set_param(self.W)
-            self.regularizers.append(self.W_regularizer)
-
-        if self.activity_regularizer:
-            self.activity_regularizer.set_layer(self)
-            self.regularizers.append(self.activity_regularizer)
-
-        if self.initial_weights is not None:
+        if self.initial_weights is None:
+            self.W = self.add_weight(
+                name=f"{self.name}_W",
+                shape=(self.nb_gaussian * 4,),
+                initializer=self.init,
+                regularizer=self.W_regularizer,
+                trainable=True,
+                constraint=self.W_constraint,
+            )
+        else:
             self.set_weights(self.initial_weights)
             del self.initial_weights
-
-        self.constraints = {}
-        if self.W_constraint:
-            self.constraints[self.W] = self.W_constraint
 
     def get_output_shape_for(self, input_shape):
         self.b_s = input_shape[0]
@@ -65,10 +56,10 @@ class LearningPrior(Layer):
         return self.b_s, self.nb_gaussian, self.height, self.width
 
     def call(self, x, mask=None):
-        mu_x = self.W[: self.nb_gaussian]
-        mu_y = self.W[self.nb_gaussian : self.nb_gaussian * 2]
-        sigma_x = self.W[self.nb_gaussian * 2 : self.nb_gaussian * 3]
-        sigma_y = self.W[self.nb_gaussian * 3 :]
+        mu_x = K.clip(self.W[: self.nb_gaussian], 0.25, 0.75)
+        mu_y = K.clip(self.W[self.nb_gaussian : self.nb_gaussian * 2], 0.35, 0.65)
+        sigma_x = K.clip(self.W[self.nb_gaussian * 2 : self.nb_gaussian * 3], 0.1, 0.9)
+        sigma_y = K.clip(self.W[self.nb_gaussian * 3 :], 0.2, 0.8)
 
         self.b_s = x.shape[0] if x.shape[0] else 1
         self.height = x.shape[2]
@@ -76,27 +67,15 @@ class LearningPrior(Layer):
 
         e = self.height / self.width
         e1 = (1 - e) / 2
-        e2 = e1 + e
+        e2 = (1 + e) / 2
 
-        mu_x = K.clip(mu_x, 0.25, 0.75)
-        mu_y = K.clip(mu_y, 0.35, 0.65)
-
-        sigma_x = K.clip(sigma_x, 0.1, 0.9)
-        sigma_y = K.clip(sigma_y, 0.2, 0.8)
-
-        x_t = tf.tensordot(
-            tf.ones((self.height, 1)),
-            tf.expand_dims(self._linspace(0, 1.0, self.width), axis=0),
-            axes=1,
-        )
-        y_t = tf.tensordot(
-            tf.expand_dims(self._linspace(e1, e2, self.height), axis=1),
-            tf.ones((1, self.width)),
-            axes=1,
+        x_t, y_t = tf.meshgrid(
+            tf.cast(tf.linspace(0, 1, self.width), dtype=tf.float32),
+            tf.cast(tf.linspace(e1, e2, self.height), dtype=tf.float32),
         )
 
-        x_t = K.repeat_elements(K.expand_dims(x_t, axis=-1), self.nb_gaussian, axis=-1)
-        y_t = K.repeat_elements(K.expand_dims(y_t, axis=-1), self.nb_gaussian, axis=-1)
+        x_t = tf.repeat(tf.expand_dims(x_t, axis=2), self.nb_gaussian, axis=2)
+        y_t = tf.repeat(tf.expand_dims(y_t, axis=2), self.nb_gaussian, axis=2)
 
         gaussian = (
             1
@@ -109,29 +88,13 @@ class LearningPrior(Layer):
             )
         )
 
-        gaussian = K.permute_dimensions(gaussian, (2, 0, 1))
-        max_gauss = K.repeat_elements(
-            K.expand_dims(
-                K.repeat_elements(
-                    K.expand_dims(K.max(K.max(gaussian, axis=1), axis=1)),
-                    self.height,
-                    axis=-1,
-                )
-            ),
-            self.width,
-            axis=-1,
-        )
-        gaussian = gaussian / max_gauss
+        gaussian /= tf.math.reduce_sum(gaussian, axis=[0, 1])
 
-        output = K.repeat_elements(K.expand_dims(gaussian, axis=0), self.b_s, axis=0)
+        gaussian = tf.repeat(tf.expand_dims(gaussian, axis=0), self.b_s, axis=0)
+
+        output = tf.transpose(gaussian, perm=[0, 3, 1, 2])  # To NCHW format
 
         return output
-
-    @staticmethod
-    def _linspace(start, stop, num):
-        # produces results identical to:
-        # np.linspace(start, stop, num)
-        return tf.experimental.numpy.linspace(start, stop, num, dtype=floatX, axis=0)
 
     def get_config(self):
         config = {
