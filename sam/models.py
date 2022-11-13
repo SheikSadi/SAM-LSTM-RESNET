@@ -181,7 +181,7 @@ def nss(y_true, y_pred):
 
 
 # Gaussian priors initialization
-def gaussian_priors_init(shape, name=None):
+def gaussian_priors_init(shape, name=None, **kwargs):
     means = np.random.uniform(low=0.3, high=0.7, size=shape[0] // 2)
     covars = np.random.uniform(low=0.05, high=0.3, size=shape[0] // 2)
     return K.variable(np.concatenate((means, covars), axis=0), name=name)
