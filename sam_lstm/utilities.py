@@ -1,9 +1,8 @@
-from __future__ import division
-
 import cv2
 import numpy as np
 import scipy.io
 import scipy.ndimage
+from sam_lstm.config import gaussina_sigma
 
 
 def padding(img, shape_r=240, shape_c=320, channels=3):
@@ -141,7 +140,7 @@ def preprocess_fixmaps(paths, shape_r, shape_c):
     return ims
 
 
-def postprocess_predictions(pred, shape_r, shape_c):
+def postprocess_predictions(pred, shape_r, shape_c, sigma=gaussina_sigma):
     predictions_shape = pred.shape
     rows_rate = shape_r / predictions_shape[0]
     cols_rate = shape_c / predictions_shape[1]
@@ -167,7 +166,7 @@ def postprocess_predictions(pred, shape_r, shape_c):
             :,
         ]
 
-    img = scipy.ndimage.filters.gaussian_filter(img, sigma=7)
+    img = scipy.ndimage.gaussian_filter(img, sigma=sigma)
     img = img / np.max(img) * 255
 
-    return img
+    return img.clip(0, 255).astype(np.int32)
