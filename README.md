@@ -1,6 +1,5 @@
-
-# Smart Cropping Images based on Saliency Mapping 
-This repository contains the reference code written in *Python 3* for **generating saliency maps** of images using Convolutional LSTM Resnet (implemented with *TensorFlow 2*)  and **smartly cropping** images based on these maps.
+# Crop and bound-box interesting regions of an image (smart cropping) from saliency maps generated with SAM-LSTM-RESNET model  
+This repository contains the reference code written in *Python 3* for **generating saliency maps** of images using Convolutional LSTM Resnet (implemented with *TensorFlow 2* )  and **smartly cropping** images based on these maps.
 ## Demo
 <table>
 	<tr>
@@ -16,17 +15,19 @@ This repository contains the reference code written in *Python 3* for **generati
 </table>
 
 ## Getting Started
-### [TRY IT NOW on Google Colab](./Smart_Cropping_Images_based_on_Saliency_Mapping.ipynb)
+<a href="https://colab.research.google.com/github/SheikSadi/SAM-LSTM-RESNET/blob/master/Smart_Cropping_Images_based_on_Saliency_Mapping.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Try Now On Colab"/></a>
 ### Pip Installation
 `pip install sam-lstm==1.0.0`
 #### Dependencies
 - Tensorflow 2.9.0
 - Scipy 1.9.3
 - Scikit Image 0.19.3
+- Numpy 1.23.4
 - OpenCV 2.9.0
 - CUDA (GPU)
 
 ***Tips**: Building up the environment on your local machine from scratch can take hours. If you want to get your hands on asap, then just use Google Colab with GPU runtime. It's free and all these libraries are preinstalled there.*
+
 ***Note** It's mandatory to run the code on GPU runtime, otherwise it will fail. In a future release, the code will be made compatible with CPU runtime as well.*
 
 ### All you need is two lines!
@@ -36,11 +37,15 @@ This repository contains the reference code written in *Python 3* for **generati
 from sam_lstm import SalMap
 SalMap.auto()
 ```
+
 With just this two lines, `sam_lstm` will compile the  LSTM-based Saliency Attentive Convolutional model, generate raw saliency mapping in the **maps** folder, colored overlay mapping in the **cmaps** folder, bounding boxes over the images in the **boxes** and cropped ones in the **crops** folder. All of these will happen automatically. Just make sure you have .jpg/.jpeg/.png images in the **samples** folder.
+![image](https://user-images.githubusercontent.com/34588815/202288598-161c4db8-586a-4e04-8bed-ff27e91595d1.png)
+
 ### Training the weights
 ```python
 from sal_lstm import SalMap
 
+dataset = "dataset"
 checkpoint = "/content/drive/MyDrive/Checkpoints/"
 
 # Uncomment these lines if on GOOGLE COLAB
@@ -53,7 +58,7 @@ checkpoint = "/content/drive/MyDrive/Checkpoints/"
 s = SalMap()
 s.compile()
 s.load_weights()
-s.train("dataset", checkpoint, steps_per_epoch=1000)
+s.train(dataset_path, checkpoint, steps_per_epoch=1000)
 ```
 With these line, you can start training the models using the Salicon 2017 dataset (which will get downloaded in the `dataset` directory)
 
