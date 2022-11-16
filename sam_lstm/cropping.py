@@ -206,9 +206,6 @@ def crop(
     # cv2.rectangle(original_ndimage, (x, y), (x + w, y + h), blue, thickness)
     for i, cent_ij in enumerate(get_centroids(salient_ndimage)):
         if i > 0:
-            name, ext = boxed_image_path.rsplit(".", 1)
-            boxed_image_path = f"{name}_{i}.{ext}"
-
             name, ext = cropped_image_path.rsplit(".", 1)
             cropped_image_path = f"{name}_{i}.{ext}"
 
