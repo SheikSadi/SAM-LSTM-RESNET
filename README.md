@@ -1,91 +1,83 @@
-# Predicting Human Eye Fixations via an LSTM-based Saliency Attentive Model
-This repository contains the reference code for computing SAM (Saliency Attentive Model) saliency maps based on the following paper:
 
-_Marcella Cornia, Lorenzo Baraldi, Giuseppe Serra, Rita Cucchiara_  
-_Predicting Human Eye Fixations via an LSTM-based Saliency Attentive Model_  
-_IEEE Transactions on Image Processing, 2018_
+# Smart Cropping Images based on Saliency Mapping 
+This repository contains the reference code written in *Python 3* for **generating saliency maps** of images using Convolutional LSTM Resnet (implemented with *TensorFlow 2*)  and **smartly cropping** images based on these maps.
+## Demo
+<table>
+	<tr>
+	 <th>Original Image</th>
+	 <th>Saliency Map</th>
+	 <th>Smart Cropping</th>
+	</tr>
+  <tr>
+	 <th><img src=https://user-images.githubusercontent.com/34588815/202250249-5282138e-2bfd-420a-9b84-15f7e68b9329.jpg></th>
+	 <th><img src=https://user-images.githubusercontent.com/34588815/202250488-9121d697-98a5-47b1-b67a-a87c7c85b6ce.jpg></th>
+	 <th><img src=https://user-images.githubusercontent.com/34588815/202250750-e594ef64-022d-4092-babf-fcbf60df2809.jpg></th>
+	</tr>
+</table>
 
-Please cite with the following Bibtex code:
+## Getting Started
+### [TRY IT NOW on Google Colab](./Smart_Cropping_Images_based_on_Saliency_Mapping.ipynb)
+### Pip Installation
+`pip install sam-lstm==1.0.0`
+#### Dependencies
+- Tensorflow 2.9.0
+- Scipy 1.9.3
+- Scikit Image 0.19.3
+- OpenCV 2.9.0
+- CUDA (GPU)
 
+***Tips**: Building up the environment on your local machine from scratch can take hours. If you want to get your hands on asap, then just use Google Colab with GPU runtime. It's free and all these libraries are preinstalled there.*
+***Note** It's mandatory to run the code on GPU runtime, otherwise it will fail. In a future release, the code will be made compatible with CPU runtime as well.*
+
+### All you need is two lines!
+```python
+# Create a folder "samples" in the current directory
+# Upload some images (.jpg, .png) in it
+from sam_lstm import SalMap
+SalMap.auto()
 ```
-@article{cornia2018predicting,
-  author = {Cornia, Marcella and Baraldi, Lorenzo and Serra, Giuseppe and Cucchiara, Rita},
-  title = {{Predicting Human Eye Fixations via an LSTM-based Saliency Attentive Model}},
-  journal = {IEEE Transactions on Image Processing},
-  volume={27},
-  number={10},
-  pages={5142--5154},
-  year = {2018}
-}
+With just this two lines, `sam_lstm` will compile the  LSTM-based Saliency Attentive Convolutional model, generate raw saliency mapping in the **maps** folder, colored overlay mapping in the **cmaps** folder, bounding boxes over the images in the **boxes** and cropped ones in the **crops** folder. All of these will happen automatically. Just make sure you have .jpg/.jpeg/.png images in the **samples** folder.
+### Training the weights
+```python
+from sal_lstm import SalMap
+
+checkpoint = "/content/drive/MyDrive/Checkpoints/"
+
+# Uncomment these lines if on GOOGLE COLAB
+# import os
+# from google.colab import drive
+# drive.mount('/content/drive')
+# if  not os.path.exists(checkpoint):
+#	os.mkdir(checkpoint)
+
+s = SalMap()
+s.compile()
+s.load_weights()
+s.train("dataset", checkpoint, steps_per_epoch=1000)
 ```
- 
-The PDF of the article is available at this [link](http://aimagelab.ing.unimore.it/imagelab/pubblicazioni/2018-tip.pdf).
+With these line, you can start training the models using the Salicon 2017 dataset (which will get downloaded in the `dataset` directory)
 
-Additional experimental results are reported in the following short paper:
+## Credits
+This work has been built on top of the following works:
+1. [Predicting Human Eye Fixations via an LSTM-based Saliency Attentive Model by Cornia et. el. 2018](http://aimagelab.ing.unimore.it/imagelab/pubblicazioni/2018-tip.pdf)
+2. Python 2 implementation (using Keras+Theano) by @marcellacornia. Check [here](https://github.com/marcellacornia/sam)
 
-_Marcella Cornia, Lorenzo Baraldi, Giuseppe Serra, Rita Cucchiara_  
-_SAM: Pushing the Limits of Saliency Prediction Models_  
-_Proceedings of the IEEE/CVF International Conference on Computer Vision and Pattern Recognition Workshops, 2018_
+## Scope of work done by @SheikSadi
+1. Implement the source code on Python 3, using latest versions (by November 2022) of tensorflow and opencv. The original work by @marcellacornia was written with Python2 and used Theano backend for Keras, all of which are now unsupported by the community.
+2. Update the preprocessing stage to be compatible with Salicon 2017 dataset.
+3. Convert the work into an open source Python package readily installable from PyPa.
+4.  Addition of the `cropping` module that allows for smart cropping of images. I have written a [Descent from Hilltop](https://gist.github.com/SheikSadi/e107c42f88a67c4113e7ca587dc3e3ce) algorithm for finding the bounding boxes by which the images are cropped.
 
-Please cite with the following Bibtex code:
-
-```
-@inproceedings{cornia2018sam,
-  author = {Cornia, Marcella and Baraldi, Lorenzo and Serra, Giuseppe and Cucchiara, Rita},
-  title = {{SAM: Pushing the Limits of Saliency Prediction Models}},
-  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision and Pattern Recognition Workshops},
-  year = {2018}
-}
-```
-
-
-## Abstract
-
-Data-driven saliency has recently gained a lot of attention thanks to the use of Convolutional Neural Networks for predicting gaze fixations. In this paper we go beyond standard approaches to saliency prediction, in which gaze maps are computed with a feed-forward network, and we present a novel model which can predict accurate saliency maps by incorporating neural attentive mechanisms. The core of our solution is a Convolutional LSTM that focuses on the most salient regions of the input image to iteratively refine the predicted saliency map. Additionally, to tackle the center bias present in human eye fixations, our model can learn a set of prior maps generated with Gaussian functions. We show, through an extensive evaluation, that the proposed architecture overcomes the current state of the art on two public saliency prediction datasets. We further study the contribution of each key components to demonstrate their robustness on different scenarios.
+## The Underlying Neural Network 
 
 ![image](https://user-images.githubusercontent.com/34588815/196414378-34a16d32-9ac0-4f98-a287-18e4456e8d26.png)
-
-## Requirements
-* Python 3.9
-* OpenCV 4.6.0
-* tensorflow/keras 2.9.0
-
-## Setting up the environment
-### Keras (WINDOWS)
-1. Go to `%USERPROFILE%` directory on Windows and create a folder `.keras`.
-2. Inside it, create `keras.json` with the following content -
-### Keras (LINUX)
-```
-cd ~/.keras
-echo '{"floatx": "float32",\
-"epsilon": 1e-07,\
-"backend": "tensorflow",\
-"image_data_format": "channels_first"}' > keras.json
-```
-## Usage
-```python
-from sam import SalMap
-salmap = SalMap()
-salmap.compile()
-salmap.load_weights(weights_path="/weights/sam-resnet_salicon_weights.pkl")
-salmap.test(samples_dir="/samples")
-```
-
-## Pretrained Models
-Download one of the following pretrained models and save it in the code folder:
-* SAM-VGG trained on SALICON (2015 release): **[sam-vgg_salicon_weights.pkl](https://github.com/marcellacornia/sam/releases/download/1.0/sam-vgg_salicon_weights.pkl)**
-* SAM-ResNet trained on SALICON (2015 release): **[sam-resnet_salicon_weights.pkl](https://github.com/marcellacornia/sam/releases/download/1.0/sam-resnet_salicon_weights.pkl)**
-* SAM-ResNet trained on SALICON (2017 release): **[sam-resnet_salicon2017_weights.pkl](https://github.com/marcellacornia/sam/releases/download/1.0/sam-resnet_salicon2017_weights.pkl)**
-
-## Precomputed Saliency Maps
-We provide saliency maps predicted by SAM-VGG and SAM-ResNet for three standard datasets (SALICON, MIT1003 and CAT2000):
-* **[SAM-VGG predictions](https://github.com/marcellacornia/sam/releases/download/1.0/sam-vgg_predictions.zip)**
-* **[SAM-ResNet predictions](https://github.com/marcellacornia/sam/releases/download/1.0/sam-resnet_predictions.zip)**
-
-In addition, we provide saliency maps predicted by SAM-ResNet on the new release of the SALICON dataset:
-* **[SAM-ResNet predictions (SALICON 2017)](https://github.com/marcellacornia/sam/releases/download/1.0/sam-resnet_predictions_salicon2017.zip)**
-
-## Contact
-For more datails about our research please visit our [page](http://imagelab.ing.unimore.it/imagelab/researchActivity.asp?idActivity=30).
-
-If you have any general doubt about our work, please use the [public issues section](https://github.com/marcellacornia/sam/issues) on this github repo. Alternatively, drop us an e-mail at <marcella.cornia@unimore.it> or <lorenzo.baraldi@unimore.it>.
+## Resources
+1. Training and validation dataset
+- images: https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/images.zip
+- maps: https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/maps.zip
+- fixations: https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/fixations.zip
+2. No Top Resnet50 weights (NCHW format)
+- https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/resnet50_weights_th_dim_ordering_th_kernels_notop.h5
+3. Pre-trained weights
+- trained by @marcellacornia: https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/sam-resnet_salicon_weights.pkl
+- trained by @SheikSadi on Google Colab:  https://github.com/SheikSadi/SAM-LSTM-RESNET/releases/download/1.0.0/sam-resnet-salicon.h5
