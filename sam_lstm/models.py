@@ -4,10 +4,10 @@ Upgraded @SheikSadi
 import keras.backend as K
 import numpy as np
 
-from sam.config import *
-from sam.dcn_resnet import dcn_resnet
-from sam.gaussian_prior import LearningPrior
-from sam.attentive_convlstm import AttentiveConvLSTM
+from sam_lstm.config import *
+from sam_lstm.dcn_resnet import dcn_resnet
+from sam_lstm.gaussian_prior import LearningPrior
+from sam_lstm.attentive_convlstm import AttentiveConvLSTM
 
 from keras.layers import Lambda, concatenate, Conv2D, UpSampling2D
 

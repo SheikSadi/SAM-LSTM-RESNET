@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from sam.config import (
+from sam_lstm.config import (
     nb_gaussian,
     shape_r_gt,
     shape_c_gt,
@@ -10,7 +10,7 @@ from sam.config import (
     shape_c_out,
     b_s,
 )
-from sam.utilities import (
+from sam_lstm.utilities import (
     preprocess_images,
     preprocess_maps,
     preprocess_fixmaps,

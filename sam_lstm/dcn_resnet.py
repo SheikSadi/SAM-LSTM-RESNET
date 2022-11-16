@@ -13,7 +13,7 @@ from keras.layers import (
 )
 from keras.models import Model
 from keras.utils import get_file
-from sam.config import TH_WEIGHTS_PATH_NO_TOP
+from sam_lstm.config import TH_WEIGHTS_PATH_NO_TOP
 
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):

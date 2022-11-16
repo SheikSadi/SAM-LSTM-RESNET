@@ -40,10 +40,10 @@ nb_timestep = 4
 # number of learned priors
 nb_gaussian = 16
 # Percentage of the total attention to retain
-retained_attention = 0.7
+retained_attention = 0.4
 # aspect ratio of the cropped image
-aspect_ratio = 1.4444444444444444  # 260/180
-
+aspect_ratio = 1.44  # 260/180
+gaussina_sigma = 1
 #########################################################################
 # TRAINING SETTINGS										            	#
 #########################################################################

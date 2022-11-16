@@ -9,16 +9,16 @@ from keras.layers import Input
 from keras.models import Model
 from keras.utils import get_file
 
-from sam.utilities import postprocess_predictions
-from sam.models import (
+from sam_lstm.utilities import postprocess_predictions
+from sam_lstm.models import (
     kl_divergence,
     correlation_coefficient,
     nss,
     sam_resnet,
 )
-from sam.generator import generator, generator_test
-from sam.cropping import batch_crop_images
-from sam.config import (
+from sam_lstm.generator import generator, generator_test
+from sam_lstm.cropping import batch_crop_images
+from sam_lstm.config import (
     shape_r,
     shape_c,
     shape_r_gt,
@@ -34,6 +34,7 @@ from sam.config import (
     DATASET_FIXS_URL,
     SAM_RESNET_SALICON_2017_WEIGHTS,
     dataset_path,
+    gaussina_sigma,
 )
 
 
@@ -41,17 +42,22 @@ tf.keras.backend.set_image_data_format(data_format="channels_first")
 
 
 class SalMap:
-    def __init__(self, asp_ratio=aspect_ratio, threshold_attention=retained_attention):
-        self.asp_ratio = asp_ratio
-        self.threshold_attention = threshold_attention
+    @classmethod
+    def auto(cls):
+        salmap = cls()
+        salmap.compile()
+        salmap.load_weights()
+        salmap.predict_maps()
+        salmap.box_and_crop()
 
+    def __init__(self):
         self.x = Input((3, shape_r, shape_c))
         self.x_maps = Input((nb_gaussian, shape_r_gt, shape_c_gt))
 
+    def compile(self):
         self.model = Model(
             inputs=[self.x, self.x_maps], outputs=sam_resnet([self.x, self.x_maps])
         )
-
         self.model.compile(
             RMSprop(learning_rate=1e-4),
             loss=[kl_divergence, correlation_coefficient, nss],
@@ -202,7 +208,7 @@ class SalMap:
             ],
         )
 
-    def load_weights(self, weights_dir):
+    def load_weights(self, weights_dir=None):
         if weights_dir:
             if not os.path.exists(weights_dir):
                 weights_dir = None
@@ -219,9 +225,7 @@ class SalMap:
 
         self.model.load_weights(weights_dir)
 
-    def predict_maps(self, imgs_test_path="/samples", weights_dir=None):
-        self.load_weights(weights_dir)
-
+    def predict_maps(self, imgs_test_path="/samples", sigma=gaussina_sigma):
         if imgs_test_path.startswith("/"):
             imgs_test_path = imgs_test_path.rsplit("/", 1)[1]
         # Output Folder Path
@@ -234,9 +238,13 @@ class SalMap:
                 f"Couldn't find the directory {imgs_test_path} or {self.imgs_test_path}"
             )
 
-        maps_folder = os.path.join(os.path.dirname(self.imgs_test_path), "maps")
+        home_dir = os.path.dirname(self.imgs_test_path)
+        maps_folder = os.path.join(home_dir, "maps")
         if not os.path.exists(maps_folder):
             os.mkdir(maps_folder)
+        cmaps_folder = os.path.join(home_dir, "cmaps")
+        if not os.path.exists(cmaps_folder):
+            os.mkdir(cmaps_folder)
 
         file_names = [
             fname
@@ -252,17 +260,31 @@ class SalMap:
 
         for pred, fname in zip(predictions, file_names):
             image_path = os.path.join(self.imgs_test_path, fname)
-            original_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-            res = postprocess_predictions(
+            original_image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+            mapped_image = postprocess_predictions(
                 pred[0], original_image.shape[0], original_image.shape[1]
             )
             map_path = os.path.join(maps_folder, fname)
-            cv2.imwrite(map_path, res.astype(int))
+            cv2.imwrite(map_path, mapped_image)
 
-        self.batch_crop()
+            gray_map = cv2.imread(map_path, cv2.IMREAD_GRAYSCALE)
+            colored_map = cv2.applyColorMap(gray_map, cv2.COLORMAP_JET)
+            overlaid = cv2.addWeighted(original_image, 0.5, colored_map, 0.5, 0)
+            cmap_path = os.path.join(cmaps_folder, fname)
+            cv2.imwrite(cmap_path, overlaid)
 
-    def batch_crop(self, a_r=aspect_ratio, attention=retained_attention):
-        originals_folder = self.imgs_test_path
+    @staticmethod
+    def box_and_crop(
+        asp_ratio=aspect_ratio,
+        threshold_attention=retained_attention,
+        originals_folder="samples",
+        alpha=20,
+        beta=15,
+        gamma=5,
+    ):
+        """
+        score = alpha ** (% of total attention) + beta ** (% of total area) + gamma ** (attention density)
+        """
         maps_folder = os.path.join(os.path.dirname(originals_folder), "maps")
         if not os.path.exists(maps_folder):
             raise Exception(
@@ -278,6 +300,9 @@ class SalMap:
             maps_folder,
             crops_folder,
             boxes_folder,
-            self.asp_ratio,
-            self.threshold_attention,
+            asp_ratio,
+            threshold_attention,
+            alpha=alpha,
+            beta=beta,
+            gamma=gamma,
         )
