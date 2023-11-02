@@ -1,18 +1,7 @@
 # Crop and bound-box interesting regions of an image (smart cropping) from saliency maps generated with SAM-LSTM-RESNET model  
 This repository contains the reference code written in *Python 3* for **generating saliency maps** of images using Convolutional LSTM Resnet (implemented with *TensorFlow 2* )  and **smartly cropping** images based on these maps.
 ## Demo
-<table>
-	<tr>
-	 <th>Original Image</th>
-	 <th>Saliency Map</th>
-	 <th>Smart Cropping</th>
-	</tr>
-  <tr>
-	 <th><img src=https://user-images.githubusercontent.com/34588815/202250249-5282138e-2bfd-420a-9b84-15f7e68b9329.jpg></th>
-	 <th><img src=https://user-images.githubusercontent.com/34588815/202250488-9121d697-98a5-47b1-b67a-a87c7c85b6ce.jpg></th>
-	 <th><img src=https://user-images.githubusercontent.com/34588815/202250750-e594ef64-022d-4092-babf-fcbf60df2809.jpg></th>
-	</tr>
-</table>
+![image](https://github.com/SheikSadi/SheikSadi/assets/34588815/ceac1dbc-338b-48df-b90e-055bee4914d1)
 
 ## Getting Started
 <a href="https://colab.research.google.com/github/SheikSadi/SAM-LSTM-RESNET/blob/master/Smart_Cropping_Images_based_on_Saliency_Mapping.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Try Now On Colab"/></a>
