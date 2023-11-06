@@ -4,7 +4,7 @@ This repository contains the reference code written in *Python 3* for **generati
 ![image](https://github.com/SheikSadi/SheikSadi/assets/34588815/ceac1dbc-338b-48df-b90e-055bee4914d1)
 
 ## Getting Started
-<a href="https://colab.research.google.com/github/SheikSadi/SAM-LSTM-RESNET/blob/master/Smart_Cropping_Images_based_on_Saliency_Mapping.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Try Now On Colab"/></a>
+<a href="https://colab.research.google.com/github/SheikSadi/SAM-LSTM-RESNET/blob/master/INTERACTIVE_GUIDE.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Try Now On Colab"/></a>
 ### Pip Installation
 `pip install sam-lstm==1.0.0`
 #### Dependencies
